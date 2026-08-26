@@ -1,2 +1,13 @@
+^doc$
+^icon$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^\.lintr$
+^Thumbs\.db$
+^README\.md$
+^LICENSE\.txt$
+^NEWS\.md$
+^cran-comments\.md$
+^Rplots\.pdf$
+
