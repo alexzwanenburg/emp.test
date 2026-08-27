@@ -3,18 +3,23 @@ NULL
 
 emp_diff_test <- function(
     ...,
-    alternative = "two.sided",
+    alternative = "two_sided",
     significance_level = 0.95,
     summary_function = mean,
-    summary_args = list()
+    summary_function_args = NULL
 ) {
   # Create test object.
-  
-  # Perform checks on input (...)
-  dots <- list(...)
-  
+  object <- methods::new(
+    "empiricalDiffTest",
+    data = list(...),
+    alternative = "alternative",
+    significance_level = significance_level,
+    summary_function = summary_function,
+    summary_function_args = summary_function_args
+  )
+
   # Perform the test.
-  
+
   # Return test information.
 }
 
@@ -25,11 +30,15 @@ setClass(
   "empiricalDiffTest",
   contains = "empiricalTest",
   slots = list(
-    alternative = "character"
+    alternative = "character",
+    summary_function = "ANY",
+    summary_function_args = "ANY"
   ),
   prototype = list(
     name = "empirical difference test",
-    alternative = "two.sided"
+    alternative = "two.sided",
+    summary_function = NULL,
+    summary_function_args = NULL
   )
 )
 
@@ -40,16 +49,56 @@ setMethod(
   signature(.Object = "empiricalDiffTest"),
   function(
     .Object,
+    data,
     significance_level,
     alternative,
+    summary_function,
+    summary_args,
     ...
   ) {
-    # Update with parent class first.
+    # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
-    
+
     # Set the alternative hypothesis.
-    .Object@alternative <- "alternative"
-    
+    .check_parameter_value_is_valid(
+      x = alternative,
+      var_name = "alternative",
+      values = c("two.sided", "two_sided", "greater", "less")
+    )
+    if (alternative == "two.sided") alternative <- "two-sided"
+    .Object@alternative <- alternative
+
+    # Check summary_function.
+    # 1. That the function is a function.
+    .check_is_function(
+      x = summary_function,
+      var_name = "summary_function"
+    )
+
+    # 2. That the function returns a single numeric value.
+    y <- do.call(
+      summary_function,
+      args = c(
+        list(data[[1L]]),
+        summary_function_args
+      )
+    )
+    .check_is_numeric(
+      x = y,
+      var_name = "summary_function output"
+    )
+    .check_argument_length(
+      x = y,
+      var_name = "summary_function output",
+      min = 1L,
+      max = 1L
+    )
+    .Object@summary_function <- summary_function
+    .Object@summary_function_args <- summary_function_args
+
+
     return(.Object)
   }
 )
+
+

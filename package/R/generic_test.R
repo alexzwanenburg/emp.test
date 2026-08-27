@@ -49,8 +49,14 @@ setMethod(
     ...
   ) {
 
-    # Check significant level
-
+    # Check significance. Significance level cannot be equal to 1.0, because
+    # that would not be meaningful.
+    .check_number_in_valid_range(
+      x = significance_level,
+      var_name = "significance_level",
+      range = c(0.0, 1.0),
+      closed = c(TRUE, FALSE)
+    )
     .Object@significance_level <- significance_level
 
     return(.Object)
