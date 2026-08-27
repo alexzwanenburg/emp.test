@@ -53,11 +53,16 @@ setMethod(
     significance_level,
     alternative,
     summary_function,
-    summary_args,
+    summary_function_args,
     ...
   ) {
     # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
+
+    data <- format_data(
+      data = data,
+      condition = c("at_least", "2")
+    )
 
     # Set the alternative hypothesis.
     .check_parameter_value_is_valid(
