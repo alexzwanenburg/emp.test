@@ -8,6 +8,7 @@
 #' @slot input_data
 #' @slot output_data description
 #' @slot significance_level description
+#' @slot n_draw_samples description
 #' @slot n_bootstraps description
 #' @slot htest description
 #'
@@ -24,6 +25,8 @@ setClass(
     output_data = "ANY",
     # Significance level of the test.
     significance_level = "numeric",
+    # Number of samples that need to be drawn.
+    n_draw_samples = "integer",
     # Number of bootstraps,
     n_bootstraps = "integer",
     # Statistical test information, similar to standard output such as from t.test.
@@ -34,6 +37,7 @@ setClass(
     input_data = NULL,
     output_data = NULL,
     significance_level = 0.95,
+    n_draw_samples = NA_integer_,
     n_bootstraps = 0L,
     htest = NULL
   )
@@ -64,14 +68,14 @@ setMethod(
 )
 
 
-# get_n_samples method ---------------------------------------------------------
+# get_n_draw_samples method ----------------------------------------------------
 
 ## generic ---------------------------------------------------------------------
-setGeneric("get_n_samples", function(object, ...) standardGeneric("get_n_samples"))
+setGeneric("get_n_draw_samples", function(object, ...) standardGeneric("get_n_draw_samples"))
 
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
-  "get_n_samples",
+  "get_n_draw_samples",
   signature(
     object = "empiricalTest"
   ),
