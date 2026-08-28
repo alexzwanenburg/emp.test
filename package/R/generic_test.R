@@ -86,3 +86,32 @@ setMethod(
     return(sum(lengths(object@input_data)))
   }
 )
+
+
+
+# run_test method --------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric("run_test", function(object, ...) standardGeneric("run_test"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "run_test",
+  signature(
+    object = "empiricalTest"
+  ),
+  function(
+    object,
+    cl = NULL
+  ) {
+    # Determine distribution of bootstraps to available threads.
+    bootstraps <- .generate_chunks(
+      object = object,
+      cl = cl
+    )
+
+    # Distribute bootstraps to runs.
+
+    # Return output for bootstraps.
+  }
+)
