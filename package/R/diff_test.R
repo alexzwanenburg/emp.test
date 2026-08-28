@@ -18,7 +18,11 @@ emp_diff_test <- function(
     summary_function_args = summary_function_args
   )
 
+  # Set the number of bootstraps.
+  object@n_bootstraps <- 1000L
+
   # Perform the test.
+  results <- run_test(object)
 
   # Return test information.
 }
@@ -101,6 +105,9 @@ setMethod(
     .Object@summary_function <- summary_function
     .Object@summary_function_args <- summary_function_args
 
+    # Set n_draw_samples, which determines the number of random numbers that
+    # should be drawn.
+    .Object@n_draw_samples <- get_n_draw_samples(.Object)
 
     return(.Object)
   }
