@@ -87,12 +87,23 @@ format_data <- function(
     )
   }
 
+  # Check that none of the data has zero length.
+  if (any(lengths(formatted_data) == 0L)) {
+    variables_empty <- formatted_data_names[lengths(formatted_data)]
+    rlang::abort(
+      message = paste0(
+        "One or more empty variables were detected: ", paste_s(variables_empty)
+      ),
+      class = c("emp_test_error", "input_argument_error")
+    )
+  }
+
+  # Check that the number of variables making up the input data is correct.
   if (!allow_more && !allow_fewer) {
-    # Check that the exact amount of sets is present.
     if (length(formatted_data) != n_sets) {
       rlang::abort(
         message = paste0(
-          "The number of expected numeric variables is exactly", n_sets, ". ",
+          "Exactly ", n_sets, " numeric variables were expected. ",
           "Found: ", length(formatted_data), " variables."
         ),
         class = c("emp_test_error", "input_argument_error")
@@ -100,9 +111,26 @@ format_data <- function(
     }
 
   } else if (allow_more) {
+    if (length(formatted_data) < n_sets) {
+      rlang::abort(
+        message = paste0(
+          "At least ", n_sets, " numeric variables were expected. ",
+          "Found: ", length(formatted_data), " variables."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
 
   } else if (allow_fewer) {
-
+    if (length(formatted_data) > n_sets) {
+      rlang::abort(
+        message = paste0(
+          "At most ", n_sets, " numeric variables were expected. ",
+          "Found: ", length(formatted_data), " variables."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
   }
 
   return(data)
