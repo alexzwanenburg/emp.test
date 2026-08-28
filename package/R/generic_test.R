@@ -115,3 +115,52 @@ setMethod(
     # Return output for bootstraps.
   }
 )
+
+# .generate_chunks -------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".generate_chunks", function(object, ...) standardGeneric(".generate_chunks"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".generate_chunks",
+  signature(
+    object = "empiricalTest"
+  ),
+  function(
+    object,
+    cl = NULL,
+    n_bootstraps = NULL
+  ) {
+    # The chunker creates a nested list of bootstrap ids that are then
+    # distributed to threads.
+
+    # Set number of bootstraps.
+    if (is.null(n_bootstraps)) n_bootstraps <- object@n_bootstraps
+
+    # Determine the number of available threads (at least 1).
+    n_threads <- min(c(length(cl), 1L))
+
+    # The maximum number of values that need to be drawn. The main overhead of
+    # rstream is starting number generation, not the number of generated
+    # numbers. Thus it is more efficient to prestream as many values as possible
+    # within each chunk. We only want to prestream at most 10 million values
+    # in total to avoid memory issues.
+    max_drawn_samples <- n_bootstraps * object@n_draw_samples
+    n_chunks <- as.integer(ceiling(max_drawn_samples / 10E6) * n_threads)
+
+    # Ensure that at each chunk has at least one bootstrap.
+    if (n_chunks > n_bootstraps) n_chunks <- n_bootstraps
+
+    # Create chunks.
+    chunks <- structure(
+      split(
+        seq_len(n_bootstraps),
+        cut(seq_len(n_bootstraps), n_chunks)
+      ),
+      names = NULL
+    )
+
+    return(chunks)
+  }
+)
