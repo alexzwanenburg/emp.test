@@ -110,11 +110,37 @@ setMethod(
       cl = cl
     )
 
-    # Distribute bootstraps to runs.
+    # Distribute bootstraps to runs and compute test statistics.
+    if (length(cl) <= 1L) {
+      results <- mapply(
+        FUN = .compute_statistic,
+        bootstraps = bootstraps,
+        MoreArgs = list(object = object),
+        SIMPLIFY = FALSE,
+        USE.NAMES = FALSE
+      )
+    } else {
+      results <- parallel::clusterMap(
+        cl = cl,
+        fun = .compute_statistic,
+        bootstraps = bootstraps,
+        MoreArgs = list(object = object),
+        SIMPLIFY = FALSE,
+        USE.NAMES = FALSE
+      )
+    }
+    results <- unlist(results, recursive = FALSE)
+    object@output_data <- results
 
-    # Return output for bootstraps.
+    # Get test results.
+    htest <- .compute_test_results(object = object)
+    object@htest <- htest
+
+    return(object)
   }
 )
+
+
 
 # .generate_chunks -------------------------------------------------------------
 
@@ -162,5 +188,40 @@ setMethod(
     )
 
     return(chunks)
+  }
+)
+
+
+
+# .compute_statistic -----------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".compute_statistic", function(object, ...) standardGeneric(".compute_statistic"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".compute_statistic",
+  signature(
+    object = "empiricalTest"
+  ),
+  function(
+    object,
+    bootstraps
+  ) {
+    # Draw random values, and then split values for further dispatching.
+    r <- .start_random_number_stream(seed=bootstraps[1L])
+    n_draw <- length(bootstraps) * object@n_draw_samples
+    random_values <- rstream::rstream.sample(r, n_draw)
+
+    # Chunks.
+    random_values <- structure(
+      split(
+        random_values,
+        cut(seq_along(random_values), length(bootstraps))
+      ),
+      names = bootstraps
+    )
+
+    # Dispatch to per-bootstrap routines.
   }
 )
