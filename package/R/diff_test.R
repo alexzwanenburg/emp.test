@@ -1,6 +1,16 @@
 #' @include generic_test.R
 NULL
 
+#' Title
+#'
+#' @param ... description
+#' @param alternative description
+#' @param significance_level description
+#' @param summary_function description
+#' @param summary_function_args description
+#'
+#' @returns htest object
+#' @export
 emp_diff_test <- function(
     ...,
     alternative = "two_sided",
@@ -12,7 +22,7 @@ emp_diff_test <- function(
   object <- methods::new(
     "empiricalDiffTest",
     data = list(...),
-    alternative = "alternative",
+    alternative = alternative,
     significance_level = significance_level,
     summary_function = summary_function,
     summary_function_args = summary_function_args
@@ -63,7 +73,7 @@ setMethod(
     # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
 
-    data <- format_data(
+    .Object@input_data <- format_data(
       data = data,
       condition = c("at_least", "2")
     )
@@ -114,3 +124,26 @@ setMethod(
 )
 
 
+# ..compute_statistic -----------------------------------------------------------
+setMethod(
+  "..compute_statistic",
+  signature(object = "empiricalDiffTest"),
+  function(
+    object,
+    ...
+  ) {
+    # Produce samples.
+    samples <- .sample_data(object, ...)
+
+    # Apply summary function to all samples.
+    values <- mapply(
+      FUN = object@summary_function,
+      samples,
+      MoreArgs = object@summary_function_args,
+      SIMPLIFY = FALSE,
+      USE.NAMES = TRUE
+    )
+
+    return(values)
+  }
+)

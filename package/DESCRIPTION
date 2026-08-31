@@ -15,8 +15,17 @@ Description: More about what it does (maybe more than one line).
 License: EUPL
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 8.1.0
 Imports:
   methods,
   rlang,
   rstream
+Config/roxygen2/version: 8.1.0
+Collate: 
+    'checks.R'
+    'data_format.R'
+    'generic_test.R'
+    'diff_test.R'
+    'emp.test-package.R'
+    'error_messages.R'
+    'random.R'
+    'utils.R'

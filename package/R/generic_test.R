@@ -5,7 +5,7 @@
 #' Add description here.
 #'
 #' @slot name description
-#' @slot input_data
+#' @slot input_data description
 #' @slot output_data_point description
 #' @slot output_data_bootstrap description,
 #' @slot significance_level description
@@ -91,6 +91,43 @@ setMethod(
   }
 )
 
+
+# .sample_data -----------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".sample_data", function(object, ...) standardGeneric(".sample_data"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".sample_data",
+  signature(object = "empiricalTest"),
+  function(object, random_values, ...) {
+    # Special case for point estimates.
+    if (is.null(random_values)) return(object@input_data)
+
+    # The default is for all samples to be resampled.
+    sampled_data <- list()
+    index_start <- 1L
+    for (variable in names(object@input_data)) {
+      n_samples <- length(object@input_data[[variable]])
+
+      index_end <- index_start + n_samples  - 1L
+      sample_indices <- as.integer(ceiling(random_values[index_start:index_end] * n_samples))
+
+      # These edge cases are highlu unlikely but not impossible.
+      sample_indices[sample_indices < 1L] <- 1L
+      sample_indices[sample_indices > n_samples] <- n_samples
+
+      # Select samples.
+      sampled_data[[variable]] <- object@input_data[[variable]][sample_indices]
+
+      # Increment random value index counter.
+      index_start <- index_end + 1L
+    }
+
+    return(sampled_data)
+  }
+)
 
 
 # run_test method --------------------------------------------------------------
@@ -179,7 +216,7 @@ setMethod(
     if (is.null(n_bootstraps)) n_bootstraps <- object@n_bootstraps
 
     # Determine the number of available threads (at least 1).
-    n_threads <- min(c(length(cl), 1L))
+    n_threads <- max(c(length(cl), 1L))
 
     # The maximum number of values that need to be drawn. The main overhead of
     # rstream is starting number generation, not the number of generated
@@ -193,13 +230,17 @@ setMethod(
     if (n_chunks > n_bootstraps) n_chunks <- n_bootstraps
 
     # Create chunks.
-    chunks <- structure(
-      split(
-        seq_len(n_bootstraps),
-        cut(seq_len(n_bootstraps), n_chunks)
-      ),
-      names = NULL
-    )
+    if (n_chunks > 1L) {
+      chunks <- structure(
+        split(
+          seq_len(n_bootstraps),
+          cut(seq_len(n_bootstraps), n_chunks)
+        ),
+        names = NULL
+      )
+    } else {
+      chunks <- list(seq_len(n_bootstraps))
+    }
 
     return(chunks)
   }
@@ -226,13 +267,17 @@ setMethod(
     random_values <- rstream::rstream.sample(r, n_draw)
 
     # Chunks.
-    random_values <- structure(
-      split(
-        random_values,
-        cut(seq_along(random_values), length(bootstraps))
-      ),
-      names = bootstraps
-    )
+    if (length(bootstraps) > 1L) {
+      random_values <- structure(
+        split(
+          random_values,
+          cut(seq_along(random_values), length(bootstraps))
+        ),
+        names = bootstraps
+      )
+    } else {
+      random_values <- list(random_values)
+    }
 
     # Dispatch to per-bootstrap routines.
     results <- mapply(
@@ -246,6 +291,8 @@ setMethod(
     return(results)
   }
 )
+
+
 
 
 # ..compute_statistic ----------------------------------------------------------
@@ -264,17 +311,17 @@ setMethod(
 )
 
 
-# ..compute_test_results -------------------------------------------------------
+# .compute_test_results --------------------------------------------------------
 
 ## generic ---------------------------------------------------------------------
-setGeneric("..compute_test_results", function(object, ...) standardGeneric("..compute_statistic"))
+setGeneric(".compute_test_results", function(object, ...) standardGeneric(".compute_test_results"))
 
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
-  "..compute_test_results",
+  ".compute_test_results",
   signature(object = "empiricalTest"),
   function(object, ...) {
     # This needs to be implemented on the level of individual tests.
-    ..error_reached_unreachable_code("..compute_test_results should be implemented in subclasses of empiricalTest.")
+    ..error_reached_unreachable_code(".compute_test_results should be implemented in subclasses of empiricalTest.")
   }
 )
