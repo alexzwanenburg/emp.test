@@ -6,7 +6,8 @@
 #'
 #' @slot name description
 #' @slot input_data
-#' @slot output_data description
+#' @slot output_data_point description
+#' @slot output_data_bootstrap description,
 #' @slot significance_level description
 #' @slot n_draw_samples description
 #' @slot n_bootstraps description
@@ -21,8 +22,10 @@ setClass(
     name = "character",
     # Copy of input data.
     input_data = "ANY",
-    # Intermediate output data.
-    output_data = "ANY",
+    # Intermediate output data (point-value)
+    output_data_point = "ANY",
+    # Intermediate output data (bootstrap-values)
+    output_data_bootstrap = "ANY",
     # Significance level of the test.
     significance_level = "numeric",
     # Number of samples that need to be drawn.
@@ -35,7 +38,8 @@ setClass(
   prototype = list(
     name = NA_character_,
     input_data = NULL,
-    output_data = NULL,
+    output_data_point = NULL,
+    output_data_bootstrap = NULL,
     significance_level = 0.95,
     n_draw_samples = NA_integer_,
     n_bootstraps = 0L,
@@ -110,7 +114,17 @@ setMethod(
       cl = cl
     )
 
-    # Distribute bootstraps to runs and compute test statistics.
+    # Compute point estimates by explicitly passing NULL.
+    object@output_data_point <- ..compute_statistic(
+      object = object,
+      random_values = NULL
+    )
+
+    # Distribute bootstraps to runs and compute test statistics. Note
+    # that .compute_statistic is a thin wrapper around ..compute_statistic.
+    # .compute_statistic handles the generation of random values based on the
+    # bootstraps created by .generate_chunks. ..compute_statistic then computes
+    # statistics within each bootstraps.
     if (length(cl) <= 1L) {
       results <- mapply(
         FUN = .compute_statistic,
@@ -130,9 +144,9 @@ setMethod(
       )
     }
     results <- unlist(results, recursive = FALSE)
-    object@output_data <- results
+    object@output_data_bootstrap <- results
 
-    # Get test results.
+    # Get test results and generate htest object.
     htest <- .compute_test_results(object = object)
     object@htest <- htest
 
@@ -201,9 +215,7 @@ setGeneric(".compute_statistic", function(object, ...) standardGeneric(".compute
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
   ".compute_statistic",
-  signature(
-    object = "empiricalTest"
-  ),
+  signature(object = "empiricalTest"),
   function(
     object,
     bootstraps
@@ -223,5 +235,46 @@ setMethod(
     )
 
     # Dispatch to per-bootstrap routines.
+    results <- mapply(
+      FUN = ..compute_statistic,
+      random_values = random_values,
+      MoreArgs = list("object" = object),
+      SIMPLIFY = FALSE,
+      USE.NAMES = FALSE
+    )
+
+    return(results)
+  }
+)
+
+
+# ..compute_statistic ----------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric("..compute_statistic", function(object, ...) standardGeneric("..compute_statistic"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "..compute_statistic",
+  signature(object = "empiricalTest"),
+  function(object, ...) {
+    # This needs to be implemented on the level of individual tests.
+    ..error_reached_unreachable_code("..compute_statistic should be implemented in subclasses of empiricalTest.")
+  }
+)
+
+
+# ..compute_test_results -------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric("..compute_test_results", function(object, ...) standardGeneric("..compute_statistic"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "..compute_test_results",
+  signature(object = "empiricalTest"),
+  function(object, ...) {
+    # This needs to be implemented on the level of individual tests.
+    ..error_reached_unreachable_code("..compute_test_results should be implemented in subclasses of empiricalTest.")
   }
 )
