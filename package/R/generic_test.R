@@ -6,10 +6,9 @@
 #'
 #' @slot name description
 #' @slot input_data description
-#' @slot output_data_point description
-#' @slot output_data_bootstrap description,
+#' @slot summary_data description,
 #' @slot significance_level description
-#' @slot n_draw_samples description
+#' @slot n_draw_input_samples description
 #' @slot n_bootstraps description
 #' @slot htest description
 #'
@@ -22,14 +21,14 @@ setClass(
     name = "character",
     # Copy of input data.
     input_data = "ANY",
-    # Intermediate output data (point-value)
-    output_data_point = "ANY",
-    # Intermediate output data (bootstrap-values)
-    output_data_bootstrap = "ANY",
+    # Intermediate output data.
+    summary_data = "ANY",
     # Significance level of the test.
     significance_level = "numeric",
-    # Number of samples that need to be drawn.
-    n_draw_samples = "integer",
+    # Number of samples that need to be drawn from input data.
+    n_draw_input_samples = "integer",
+    # Number of samples that need to be drawn from summary data.
+    n_draw_summary_samples = "integer",
     # Number of bootstraps,
     n_bootstraps = "integer",
     # Statistical test information, similar to standard output such as from t.test.
@@ -38,10 +37,10 @@ setClass(
   prototype = list(
     name = NA_character_,
     input_data = NULL,
-    output_data_point = NULL,
-    output_data_bootstrap = NULL,
+    summary_data = NULL,
     significance_level = 0.95,
-    n_draw_samples = NA_integer_,
+    n_draw_input_samples = NA_integer_,
+    n_draw_summary_samples = NA_integer_,
     n_bootstraps = 0L,
     htest = NULL
   )
@@ -72,14 +71,15 @@ setMethod(
 )
 
 
-# get_n_draw_samples method ----------------------------------------------------
+
+# get_n_draw_input_samples method ----------------------------------------------
 
 ## generic ---------------------------------------------------------------------
-setGeneric("get_n_draw_samples", function(object, ...) standardGeneric("get_n_draw_samples"))
+setGeneric("get_n_draw_input_samples", function(object, ...) standardGeneric("get_n_draw_input_samples"))
 
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
-  "get_n_draw_samples",
+  "get_n_draw_input_samples",
   signature(
     object = "empiricalTest"
   ),
@@ -90,6 +90,22 @@ setMethod(
     return(sum(lengths(object@input_data)))
   }
 )
+
+# get_n_draw_summary_samples method --------------------------------------------
+setGeneric("get_n_draw_summary_samples", function(object, ...) standardGeneric("get_n_draw_summary_samples"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "get_n_draw_summary_samples",
+  signature(object = "empiricalTest"),
+  function(object) {
+    if (is.null(object@summary_data)) return(0L)
+
+    # The default is for all summary data to be resampled.
+    return(sum(lengths(object@summary_data)))
+  }
+)
+
 
 
 # .sample_data -----------------------------------------------------------------
@@ -145,26 +161,59 @@ setMethod(
     object,
     cl = NULL
   ) {
-    # Determine distribution of bootstraps to available threads.
+
+    # Distribute bootstraps to runs and compute summary statistics (if
+    # required). Note that .compute_summary_statistic is a thin wrapper around
+    # ..compute_summary_statistic. .compute_summary_statistic handles the
+    # generation of random values based on the bootstraps created by
+    # .generate_chunks. ..compute_summary_statistic then computes statistics
+    # within each bootstraps.
+    if (is.null(object@summary_function)) {
+      # Propagate input data to summary data if there is no summary function. This
+      # is allowed for tests that do not need a summary function, e.g. mean.
+      object@summary_data <- object@input_data
+
+    } else {
+      # Determine distribution of bootstraps to available threads.
+      bootstraps <- .generate_chunks(
+        object = object,
+        cl = cl
+      )
+
+      if (length(cl) <= 1L) {
+        results <- mapply(
+          FUN = .compute_summary_statistic,
+          bootstraps = bootstraps,
+          MoreArgs = list(object = object),
+          SIMPLIFY = FALSE,
+          USE.NAMES = FALSE
+        )
+      } else {
+        results <- parallel::clusterMap(
+          cl = cl,
+          fun = .compute_summary_statistic,
+          bootstraps = bootstraps,
+          MoreArgs = list(object = object),
+          SIMPLIFY = FALSE,
+          USE.NAMES = FALSE
+        )
+      }
+      results <- unlist(results, recursive = FALSE)
+      object@summary_data <- results
+    }
+
+    # Determine the number of samples that need to be drawn.
+    object@n_draw_summary_samples <- get_n_draw_summary_samples(object)
+
+    # Conduct tests on bootstraps of the summary data.
     bootstraps <- .generate_chunks(
       object = object,
       cl = cl
     )
 
-    # Compute point estimates by explicitly passing NULL.
-    object@output_data_point <- ..compute_statistic(
-      object = object,
-      random_values = NULL
-    )
-
-    # Distribute bootstraps to runs and compute test statistics. Note
-    # that .compute_statistic is a thin wrapper around ..compute_statistic.
-    # .compute_statistic handles the generation of random values based on the
-    # bootstraps created by .generate_chunks. ..compute_statistic then computes
-    # statistics within each bootstraps.
     if (length(cl) <= 1L) {
       results <- mapply(
-        FUN = .compute_statistic,
+        FUN = .bootstrap_test,
         bootstraps = bootstraps,
         MoreArgs = list(object = object),
         SIMPLIFY = FALSE,
@@ -173,15 +222,14 @@ setMethod(
     } else {
       results <- parallel::clusterMap(
         cl = cl,
-        fun = .compute_statistic,
+        fun = .bootstrap_test,
         bootstraps = bootstraps,
         MoreArgs = list(object = object),
         SIMPLIFY = FALSE,
         USE.NAMES = FALSE
       )
     }
-    results <- unlist(results, recursive = FALSE)
-    object@output_data_bootstrap <- results
+
 
     # Get test results and generate htest object.
     htest <- .compute_test_results(object = object)
@@ -218,12 +266,19 @@ setMethod(
     # Determine the number of available threads (at least 1).
     n_threads <- max(c(length(cl), 1L))
 
+    # Determine where the bootstraps should operate on.
+    if (is.null(object@summary_data)) {
+      n_samples <- object@n_draw_input_samples
+    } else {
+      n_samples <- object@n_draw_summary_samples
+    }
+
     # The maximum number of values that need to be drawn. The main overhead of
     # rstream is starting number generation, not the number of generated
     # numbers. Thus it is more efficient to prestream as many values as possible
     # within each chunk. We only want to prestream at most 10 million values
     # in total to avoid memory issues.
-    max_drawn_samples <- n_bootstraps * object@n_draw_samples
+    max_drawn_samples <- n_bootstraps * n_samples
     n_chunks <- as.integer(ceiling(max_drawn_samples / 10E6) * n_threads)
 
     # Ensure that at each chunk has at least one bootstrap.
@@ -248,14 +303,14 @@ setMethod(
 
 
 
-# .compute_statistic -----------------------------------------------------------
+# .compute_summary_statistic ---------------------------------------------------
 
 ## generic ---------------------------------------------------------------------
-setGeneric(".compute_statistic", function(object, ...) standardGeneric(".compute_statistic"))
+setGeneric(".compute_summary_statistic", function(object, ...) standardGeneric(".compute_summary_statistic"))
 
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
-  ".compute_statistic",
+  ".compute_summary_statistic",
   signature(object = "empiricalTest"),
   function(
     object,
@@ -263,7 +318,7 @@ setMethod(
   ) {
     # Draw random values, and then split values for further dispatching.
     r <- .start_random_number_stream(seed=bootstraps[1L])
-    n_draw <- length(bootstraps) * object@n_draw_samples
+    n_draw <- length(bootstraps) * object@n_draw_input_samples
     random_values <- rstream::rstream.sample(r, n_draw)
 
     # Chunks.
@@ -281,7 +336,7 @@ setMethod(
 
     # Dispatch to per-bootstrap routines.
     results <- mapply(
-      FUN = ..compute_statistic,
+      FUN = ..compute_summary_statistic,
       random_values = random_values,
       MoreArgs = list("object" = object),
       SIMPLIFY = FALSE,
@@ -295,18 +350,79 @@ setMethod(
 
 
 
-# ..compute_statistic ----------------------------------------------------------
+# ..compute_summary_statistic --------------------------------------------------
 
 ## generic ---------------------------------------------------------------------
-setGeneric("..compute_statistic", function(object, ...) standardGeneric("..compute_statistic"))
+setGeneric("..compute_summary_statistic", function(object, ...) standardGeneric("..compute_summary_statistic"))
 
 ## empiricalTest ---------------------------------------------------------------
 setMethod(
-  "..compute_statistic",
+  "..compute_summary_statistic",
   signature(object = "empiricalTest"),
   function(object, ...) {
     # This needs to be implemented on the level of individual tests.
-    ..error_reached_unreachable_code("..compute_statistic should be implemented in subclasses of empiricalTest.")
+    ..error_reached_unreachable_code("..compute_summary_statistic should be implemented in subclasses of empiricalTest.")
+  }
+)
+
+
+# .bootstrap_test --------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".bootstrap_test", function(object, ...) standardGeneric(".bootstrap_test"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".bootstrap_test",
+  signature(object = "empiricalTest"),
+  function(
+    object,
+    bootstraps
+  ) {
+    # Draw random values, and then split values for further dispatching.
+    r <- .start_random_number_stream(seed=bootstraps[1L])
+    n_draw <- length(bootstraps) * object@n_draw_summary_samples
+    random_values <- rstream::rstream.sample(r, n_draw)
+
+    # Chunks.
+    if (length(bootstraps) > 1L) {
+      random_values <- structure(
+        split(
+          random_values,
+          cut(seq_along(random_values), length(bootstraps))
+        ),
+        names = bootstraps
+      )
+    } else {
+      random_values <- list(random_values)
+    }
+
+    # Dispatch to per-bootstrap routines.
+    results <- mapply(
+      FUN = ..bootstrap_test,
+      random_values = random_values,
+      MoreArgs = list("object" = object),
+      SIMPLIFY = FALSE,
+      USE.NAMES = FALSE
+    )
+
+    return(results)
+  }
+)
+
+
+# ..bootstrap_test --------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric("..bootstrap_test", function(object, ...) standardGeneric("..bootstrap_test"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "..bootstrap_test",
+  signature(object = "empiricalTest"),
+  function(object, ...) {
+    # This needs to be implemented on the level of individual tests.
+    ..error_reached_unreachable_code("..bootstrap_test should be implemented in subclasses of empiricalTest.")
   }
 )
 

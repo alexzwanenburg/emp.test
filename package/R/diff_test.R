@@ -1,4 +1,5 @@
 #' @include generic_test.R
+#' @include generic_location_test.R
 NULL
 
 #' Title
@@ -39,21 +40,11 @@ emp_diff_test <- function(
 
 
 
+
 # empiricalDiffTest object -----------------------------------------------------
 setClass(
   "empiricalDiffTest",
-  contains = "empiricalTest",
-  slots = list(
-    alternative = "character",
-    summary_function = "ANY",
-    summary_function_args = "ANY"
-  ),
-  prototype = list(
-    name = "empirical difference test",
-    alternative = "two.sided",
-    summary_function = NULL,
-    summary_function_args = NULL
-  )
+  contains = "empiricalGenericLocTest",
 )
 
 
@@ -63,70 +54,40 @@ setMethod(
   signature(.Object = "empiricalDiffTest"),
   function(
     .Object,
-    data,
-    significance_level,
-    alternative,
-    summary_function,
-    summary_function_args,
     ...
   ) {
+    .Object@name <- "empirical difference test"
+
     # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
 
-    .Object@input_data <- format_data(
-      data = data,
+    # Check specific conditions for data.
+    .check_input_data(
+      .Object@input_data,
       condition = c("at_least", "2")
     )
 
-    # Set the alternative hypothesis.
-    .check_parameter_value_is_valid(
-      x = alternative,
-      var_name = "alternative",
-      values = c("two.sided", "two_sided", "greater", "less")
-    )
-    if (alternative == "two.sided") alternative <- "two-sided"
-    .Object@alternative <- alternative
-
-    # Check summary_function.
-    # 1. That the function is a function.
-    .check_is_function(
-      x = summary_function,
-      var_name = "summary_function"
-    )
-
-    # 2. That the function returns a single numeric value.
-    y <- do.call(
-      summary_function,
-      args = c(
-        list(data[[1L]]),
-        summary_function_args
+    # Check that a summary function is set (unpaired empirical difference tests
+    # cannot operate on raw data).
+    if (is.null(.Object@summary_function)) {
+      rlang::abort(
+        message = paste0(
+          "The summary function cannot be empty for ", .Object@name, ". "
+        )
       )
-    )
-    .check_is_numeric(
-      x = y,
-      var_name = "summary_function output"
-    )
-    .check_argument_length(
-      x = y,
-      var_name = "summary_function output",
-      min = 1L,
-      max = 1L
-    )
-    .Object@summary_function <- summary_function
-    .Object@summary_function_args <- summary_function_args
+    }
 
-    # Set n_draw_samples, which determines the number of random numbers that
-    # should be drawn.
-    .Object@n_draw_samples <- get_n_draw_samples(.Object)
+    # Set n_draw_input_samples, which determines the number of random numbers that
+    # should be drawn for summaries,
+    .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
 
     return(.Object)
   }
 )
 
 
-# ..compute_statistic -----------------------------------------------------------
 setMethod(
-  "..compute_statistic",
+  "..bootstrap_test",
   signature(object = "empiricalDiffTest"),
   function(
     object,
@@ -135,15 +96,8 @@ setMethod(
     # Produce samples.
     samples <- .sample_data(object, ...)
 
-    # Apply summary function to all samples.
-    values <- mapply(
-      FUN = object@summary_function,
-      samples,
-      MoreArgs = object@summary_function_args,
-      SIMPLIFY = FALSE,
-      USE.NAMES = TRUE
-    )
+    # Iterate over combinations of groups.
 
-    return(values)
+    # Per group determine
   }
 )
