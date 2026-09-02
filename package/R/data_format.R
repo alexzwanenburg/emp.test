@@ -76,7 +76,10 @@ format_data <- function(data) {
     )
   }
 
-  return(data)
+  # Set names.
+  names(formatted_data) <- formatted_data_names
+
+  return(formatted_data)
 }
 
 

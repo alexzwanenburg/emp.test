@@ -24,6 +24,7 @@ Collate:
     'checks.R'
     'data_format.R'
     'generic_test.R'
+    'generic_location_test.R'
     'diff_test.R'
     'emp.test-package.R'
     'error_messages.R'
