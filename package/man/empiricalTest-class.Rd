@@ -14,13 +14,11 @@ Add description here.
 
 \item{\code{input_data}}{description}
 
-\item{\code{output_data_point}}{description}
-
-\item{\code{output_data_bootstrap}}{description,}
+\item{\code{summary_data}}{description,}
 
 \item{\code{significance_level}}{description}
 
-\item{\code{n_draw_samples}}{description}
+\item{\code{n_draw_input_samples}}{description}
 
 \item{\code{n_bootstraps}}{description}
 
