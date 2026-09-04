@@ -85,19 +85,101 @@ setMethod(
   }
 )
 
-
+# .test ------------------------------------------------------------------------
 setMethod(
-  "..bootstrap_test",
+  ".test",
   signature(object = "empiricalDiffTest"),
   function(
     object,
+    data,
     ...
   ) {
-    # Produce samples.
-    samples <- .sample_data(object, ...)
+    test_output <- list()
 
     # Iterate over combinations of groups.
+    for (groups in combn(names(data), m = 2L, simplify = FALSE)) {
+      results <- ..test(
+        object = object,
+        x_1 = data[[groups[1L]]],
+        x_2 = data[[groups[2L]]]
+      )
+      test_output[[paste0(groups[1L], " - ", paste0(groups[2L]))]] <- results
+    }
 
-    # Per group determine
+    return(test_output)
+  }
+)
+
+
+# ..test -----------------------------------------------------------------------
+setMethod(
+  "..test",
+  signature(object = "empiricalDiffTest"),
+  function(
+    object,
+    x_1,
+    x_2,
+    ...
+  ) {
+    # Compute difference between groups. Pre-sort so that both quantile
+    # and
+    x <- sort(x_1 - x_2)
+    effect <- stats::median(x, type = 8L)
+
+    # Compute confidence interval.
+    ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
+
+    # Compute percentiles on x. Note that this corresponds to type = 8.
+    p <- (seq_along(x) - 1.0 / 3.0) / (length(x) + 1.0 /3.0)
+    p_value <- suppressWarnings(
+      stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+    )
+
+    # Test null hypothesis and compute 0-value.
+    if (object@alternative == "two_sided") {
+      reject_null <- ci[1L] >= 0.0 || (ci[2L] <= 0.0)
+      p_value <- min(c(p_value, 1.0 - p_value)) * 2.0
+
+    } else if (object@alternative == "less") {
+      reject_null <- ci[1L] <= 0.0
+      p_value <- 1.0 - p_value
+
+    } else if (object@alternative == "greater") {
+      reject_null <- ci[1L] >= 0.0
+      p_value <- p_value
+
+    } else {
+      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+    }
+
+    return(list(
+      effect = effect,
+      confidence_interval = ci,
+      p_value = p_value,
+      reject_null = reject_null
+    ))
+  }
+)
+
+
+# .compute_test_results --------------------------------------------------------
+setMethod(
+  ".compute_test_results",
+  signature(object = "empiricalDiffTest"),
+  function(
+    object,
+    x,
+    ...
+  ) {
+    # Obtain results.
+    results <- .test(object = object, data = object@summary_data)
+
+    # Compute statistical power based on bootstrap tests.
+    for (group in names(x)) {
+      statistical_power <- sum(x[[group]]$reject_null) / length(x[[group]]$reject_null)
+      results[[group]]$power <- statistical_power
+    }
+
+    return(results)
   }
 )

@@ -8,17 +8,20 @@ setClass(
   contains = "empiricalTest",
   slots = list(
     alternative = "character",
+    percentiles = "numeric",
     summary_function = "ANY",
     summary_function_args = "ANY"
   ),
   prototype = list(
     alternative = "two.sided",
+    percentiles = NA_real_,
     summary_function = NULL,
     summary_function_args = NULL
   )
 )
 
 
+# initialize -------------------------------------------------------------------
 setMethod(
   "initialize",
   signature(.Object = "empiricalGenericLocTest"),
@@ -44,6 +47,9 @@ setMethod(
     )
     if (alternative == "two.sided") alternative <- "two-sided"
     .Object@alternative <- alternative
+
+    # Set percentiles.
+    .Object <- .set_percentiles(object = .Object)
 
     # Check summary_function.
     if (!is.null(summary_function)) {
@@ -76,6 +82,45 @@ setMethod(
 
       return(.Object)
     }
+  }
+)
+
+
+# .set_percentiles -------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".set_percentiles", function(object, ...) standardGeneric(".set_percentiles"))
+
+## empiricalGenericLocTest -----------------------------------------------------
+setMethod(
+  ".set_percentiles",
+  signature(object = "empiricalGenericLocTest"),
+  function(
+    object,
+    ...
+  ) {
+    if (object@alternative == "two_sided") {
+      # group 1 has either smaller or larger summary statistic than group 2
+      # by default (0.025, 0.975)
+      pctl <- c(0.5 - object@significance_level / 2.0, 0.5 + object@significance_level / 2.0)
+
+    } else if (object@alternative == "less") {
+      # group 1 has smaller summary statistic than group 2
+      # by default (0.95)
+      pctl <- object@significance_level
+
+    } else if (object@alternative == "greater") {
+      # group 1 has larger summary statistic than group 2
+      # by default (0.05)
+      pctl <- 1.0 - object@significance_level
+
+    } else {
+      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+    }
+
+    object@percentiles <- pctl
+
+    return(object)
   }
 )
 

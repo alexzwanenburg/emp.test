@@ -118,14 +118,18 @@ setMethod(
   ".sample_data",
   signature(object = "empiricalTest"),
   function(object, random_values, ...) {
+    data <- object@summary_data
+    if (is.null(data)) data <- object@input_data
+    if (is.null(random_values)) return(data)
+
     # Special case for point estimates.
     if (is.null(random_values)) return(object@input_data)
 
     # The default is for all samples to be resampled.
     sampled_data <- list()
     index_start <- 1L
-    for (variable in names(object@input_data)) {
-      n_samples <- length(object@input_data[[variable]])
+    for (variable in names(data)) {
+      n_samples <- length(data[[variable]])
 
       index_end <- index_start + n_samples  - 1L
       sample_indices <- as.integer(ceiling(random_values[index_start:index_end] * n_samples))
@@ -135,7 +139,7 @@ setMethod(
       sample_indices[sample_indices > n_samples] <- n_samples
 
       # Select samples.
-      sampled_data[[variable]] <- object@input_data[[variable]][sample_indices]
+      sampled_data[[variable]] <- data[[variable]][sample_indices]
 
       # Increment random value index counter.
       index_start <- index_end + 1L
@@ -233,10 +237,10 @@ setMethod(
         USE.NAMES = FALSE
       )
     }
-
+    results <- aggregate_results(x = results)
 
     # Get test results and generate htest object.
-    htest <- .compute_test_results(object = object)
+    htest <- .compute_test_results(object = object, x = results)
     object@htest <- htest
 
     return(object)
@@ -384,7 +388,7 @@ setMethod(
     bootstraps
   ) {
     # Draw random values, and then split values for further dispatching.
-    r <- .start_random_number_stream(seed=bootstraps[1L])
+    r <- .start_random_number_stream(seed = bootstraps[1L] + 1L)
     n_draw <- length(bootstraps) * object@n_draw_summary_samples
     random_values <- rstream::rstream.sample(r, n_draw)
 
@@ -424,11 +428,46 @@ setGeneric("..bootstrap_test", function(object, ...) standardGeneric("..bootstra
 setMethod(
   "..bootstrap_test",
   signature(object = "empiricalTest"),
-  function(object, ...) {
-    # This needs to be implemented on the level of individual tests.
-    ..error_reached_unreachable_code("..bootstrap_test should be implemented in subclasses of empiricalTest.")
+  function(
+    object,
+    ...
+  ) {
+    # Produce samples.
+    samples <- .sample_data(object, ...)
+
+    return(.test(object = object, data = samples))
   }
 )
+
+
+# .test ------------------------------------------------------------------------
+setGeneric(".test", function(object, ...) standardGeneric(".test"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".test",
+  signature(object = "empiricalTest"),
+  function(object, data, ...) {
+    # This needs to be implemented on the level of individual tests.
+    ..error_reached_unreachable_code(".test should be implemented in subclasses of empiricalTest.")
+  }
+)
+
+# ..test -----------------------------------------------------------------------
+setGeneric("..test", function(object, ...) standardGeneric("..test"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  "..test",
+  signature(object = "empiricalTest"),
+  function(object, ...) {
+    # This needs to be implemented on the level of individual tests.
+    ..error_reached_unreachable_code("..test should be implemented in subclasses of empiricalTest.")
+  }
+)
+
+
+
 
 
 # .compute_test_results --------------------------------------------------------

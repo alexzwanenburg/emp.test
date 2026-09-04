@@ -27,3 +27,27 @@ paste_s <- function(...) {
     return(paste0(dots))
   }
 }
+
+
+aggregate_results <- function(x) {
+  # Flatten list (is chunked by sets of bootstraps).
+  x <- unlist(x, recursive = FALSE)
+
+  # Identify groups.
+  groups <- names(x[[1L]])
+  group_list <- list()
+
+  for (group in groups) {
+    group_results <- lapply(x, function(x, group) (x[[group]]), group = group)
+    element_list <- list()
+
+    for (element in names(group_results[[1L]])) {
+      element_data <- sapply(group_results, function(x, element) (x[[element]]), element = element)
+      if (is.matrix(element_data)) element_data <- t(element_data)
+      element_list[[element]] <- element_data
+    }
+    group_list[[group]] <- element_list
+  }
+
+  return(group_list)
+}
