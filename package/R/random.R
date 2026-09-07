@@ -9,7 +9,7 @@
 
 
 
-ragn <- function(
+.ragn <- function(
     n,
     location = 0.0,
     scale = 1.0,
@@ -75,4 +75,24 @@ ragn <- function(
   x[p_greater] <- location + scale / alpha * x_sgnd[p_greater]
 
   return(x)
+}
+
+
+
+.rnorm <- function(
+    n,
+    mean = 0.0,
+    sd = 1.0,
+    seed = NULL
+) {
+  # Normal distribution is a special case of an asymmetric generalised normal
+  # distribution.
+  return(.ragn(
+    n = n,
+    location = mean,
+    scale = sd / sqrt(2.0),
+    alpha = 0.5,
+    beta = 2.0,
+    seed = seed
+  ))
 }
