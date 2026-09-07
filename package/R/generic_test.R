@@ -329,23 +329,19 @@ setMethod(
     n_draw <- length(bootstraps) * object@n_draw_input_samples
     random_values <- rstream::rstream.sample(r, n_draw)
 
-    # Chunks.
-    if (length(bootstraps) > 1L) {
-      random_values <- structure(
-        split(
-          random_values,
-          cut(seq_along(random_values), length(bootstraps))
-        ),
-        names = bootstraps
-      )
-    } else {
-      random_values <- list(random_values)
+    # Create chunks of random values. Note that this method is faster than
+    # structure(split(..., cut(...))).
+    random_value_chunks <- list()
+    index_start <- 1L
+    for (ii in seq_along(bootstraps)) {
+      random_value_chunks[[ii]] <- random_values[index_start:(index_start + object@n_draw_input_samples - 1L)]
+      index_start <- index_start + object@n_draw_input_samples
     }
 
     # Dispatch to per-bootstrap routines.
     results <- mapply(
       FUN = ..compute_summary_statistic,
-      random_values = random_values,
+      random_values = random_value_chunks,
       MoreArgs = list("object" = object),
       SIMPLIFY = FALSE,
       USE.NAMES = FALSE
@@ -392,23 +388,19 @@ setMethod(
     n_draw <- length(bootstraps) * object@n_draw_summary_samples
     random_values <- rstream::rstream.sample(r, n_draw)
 
-    # Chunks.
-    if (length(bootstraps) > 1L) {
-      random_values <- structure(
-        split(
-          random_values,
-          cut(seq_along(random_values), length(bootstraps))
-        ),
-        names = bootstraps
-      )
-    } else {
-      random_values <- list(random_values)
+    # Create chunks of random values. Note that this method is faster than
+    # structure(split(..., cut(...))).
+    random_value_chunks <- list()
+    index_start <- 1L
+    for (ii in seq_along(bootstraps)) {
+      random_value_chunks[[ii]] <- random_values[index_start:(index_start + object@n_draw_summary_samples - 1L)]
+      index_start <- index_start + object@n_draw_summary_samples
     }
 
     # Dispatch to per-bootstrap routines.
     results <- mapply(
       FUN = ..bootstrap_test,
-      random_values = random_values,
+      random_values = random_value_chunks,
       MoreArgs = list("object" = object),
       SIMPLIFY = FALSE,
       USE.NAMES = FALSE
@@ -435,7 +427,7 @@ setMethod(
     # Produce samples.
     samples <- .sample_data(object, ...)
 
-    return(.test(object = object, data = samples))
+    return(.test(object = object, data = samples, hypothesis_test_only = FALSE))
   }
 )
 

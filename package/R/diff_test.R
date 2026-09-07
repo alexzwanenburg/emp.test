@@ -92,6 +92,7 @@ setMethod(
   function(
     object,
     data,
+    hypothesis_test_only = FALSE,
     ...
   ) {
     test_output <- list()
@@ -101,7 +102,8 @@ setMethod(
       results <- ..test(
         object = object,
         x_1 = data[[groups[1L]]],
-        x_2 = data[[groups[2L]]]
+        x_2 = data[[groups[2L]]],
+        hypothesis_test_only = hypothesis_test_only
       )
       test_output[[paste0(groups[1L], " - ", paste0(groups[2L]))]] <- results
     }
@@ -119,15 +121,35 @@ setMethod(
     object,
     x_1,
     x_2,
+    hypothesis_test_only = FALSE,
     ...
   ) {
     # Compute difference between groups. Pre-sort so that both quantile
     # and
     x <- sort(x_1 - x_2)
-    effect <- stats::median(x, type = 8L)
 
     # Compute confidence interval.
     ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
+
+    if (hypothesis_test_only) {
+      # Test null hypothesis and compute 0-value.
+      if (object@alternative == "two_sided") {
+        reject_null <- ci[1L] >= 0.0 || (ci[2L] <= 0.0)
+
+      } else if (object@alternative == "less") {
+        reject_null <- ci[1L] <= 0.0
+
+      } else if (object@alternative == "greater") {
+        reject_null <- ci[1L] >= 0.0
+
+      } else {
+        ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+      }
+      return(list("reject_null" = reject_null))
+    }
+
+    # Compute effect..
+    effect <- stats::median(x, type = 8L)
 
     # Compute percentiles on x. Note that this corresponds to type = 8.
     p <- (seq_along(x) - 1.0 / 3.0) / (length(x) + 1.0 /3.0)
@@ -153,10 +175,10 @@ setMethod(
     }
 
     return(list(
-      effect = effect,
-      confidence_interval = ci,
-      p_value = p_value,
-      reject_null = reject_null
+      "effect" = effect,
+      "confidence_interval" = ci,
+      "p_value" = p_value,
+      "reject_null" = reject_null
     ))
   }
 )

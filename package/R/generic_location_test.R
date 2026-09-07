@@ -151,3 +151,20 @@ setMethod(
 )
 
 
+# ..bootstrap_test -------------------------------------------------------------
+setMethod(
+  "..bootstrap_test",
+  signature(object = "empiricalGenericLocTest"),
+  function(
+    object,
+    ...
+  ) {
+    # Produce samples.
+    samples <- .sample_data(object, ...)
+
+    # For bootstraps on summary statistics for location tests, test only the
+    # hypothesis: we use this to compute the statistical power, whereas the
+    # summary statistics data is used to determine p-values.
+    return(.test(object = object, data = samples, hypothesis_test_only = TRUE))
+  }
+)
