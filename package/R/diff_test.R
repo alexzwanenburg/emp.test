@@ -12,7 +12,7 @@ NULL
 #'
 #' @returns htest object
 #' @export
-emp_diff_test <- function(
+difference_test <- function(
     ...,
     alternative = "two_sided",
     significance_level = 0.95,
