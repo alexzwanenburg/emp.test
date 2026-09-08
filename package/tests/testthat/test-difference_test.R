@@ -217,3 +217,8 @@ testthat::test_that(
     testthat::expect_lte(results_2$p.value, 0.001)
   }
 )
+
+
+# Test on multiple groups.
+
+# Test with different summary statistic.

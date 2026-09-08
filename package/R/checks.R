@@ -3,6 +3,7 @@
 .check_is_numeric <- function(
     x,
     var_name,
+    check_finite = TRUE,
     call = rlang::caller_env()
 ) {
   if (!is.numeric(x)) {
@@ -12,6 +13,16 @@
       valid_type = "numeric",
       call = call
     )
+  }
+
+  if (check_finite) {
+    if (any(!is.finite(x))) {
+      rlang::abort(
+        message = paste0(var_name, " is expected to contain only finite numeric values."),
+        class = c("emp_test_error", "input_argument_error"),
+        call = call
+      )
+    }
   }
 
   return(invisible(TRUE))

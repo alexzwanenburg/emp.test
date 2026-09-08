@@ -28,5 +28,6 @@ Collate:
     'diff_test.R'
     'emp.test-package.R'
     'error_messages.R'
+    'loc_test.R'
     'random.R'
     'utils.R'
