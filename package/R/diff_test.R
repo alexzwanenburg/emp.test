@@ -36,6 +36,7 @@ difference_test <- function(
   results <- run_test(object)
 
   # Return test information.
+  return(results@htest)
 }
 
 
@@ -164,10 +165,12 @@ setMethod(
 
     } else if (object@alternative == "less") {
       reject_null <- ci[1L] <= 0.0
+      ci <- c(-Inf, ci[1L])
       p_value <- 1.0 - p_value
 
     } else if (object@alternative == "greater") {
       reject_null <- ci[1L] >= 0.0
+      ci <- c(ci[1L], Inf)
       p_value <- p_value
 
     } else {
