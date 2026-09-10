@@ -1,10 +1,10 @@
 #' emp.test: Title
 #'
-#' @docType package
 #' @name emp.test
 #' @import methods
 #' @importFrom rlang .data
 #' @importClassesFrom rstream rstream.runif
+#' @keywords internal
 "_PACKAGE"
 
 ## usethis namespace: start
