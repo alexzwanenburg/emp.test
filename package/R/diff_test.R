@@ -181,7 +181,8 @@ setMethod(
       "effect" = effect,
       "confidence_interval" = ci,
       "p_value" = p_value,
-      "reject_null" = reject_null
+      "reject_null" = reject_null,
+      "alternative" = object@alternative
     ))
   }
 )
