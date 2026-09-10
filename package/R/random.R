@@ -1,8 +1,11 @@
 .start_random_number_stream <- function(seed) {
   # From familiar. Starts an rstream.
-  if (is.null(seed)) return(NULL)
+  if (is.null(seed)) {
+    r <- methods::new("rstream.runif")
 
-  r <- methods::new("rstream.runif", seed = seed)
+  } else {
+    r <- methods::new("rstream.runif", seed = seed)
+  }
 
   return(r)
 }
