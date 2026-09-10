@@ -220,7 +220,71 @@ testthat::test_that(
 
 
 # Test on multiple groups.
+testthat::test_that(
+  "Location test functions correctly with multiple groups",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+    x_2 <- emp.test:::.rnorm(50L, seed = 20L)
+
+    # Small difference.
+    results_1 <- emp.test::location_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      location = 0.1
+    )
+    results_2a <- stats::t.test(
+      x = x_1,
+      mu = 0.1
+    )
+    results_2b <- stats::t.test(
+      x = x_2,
+      mu = 0.1
+    )
+    testthat::expect_length(results_1$x_1$confidence_interval, 2L)
+    testthat::expect_lte(abs(results_1$x_1$p_value - results_2a$p.value), 0.05)
+    testthat::expect_lte(results_2a$p.value, 0.75)
+    testthat::expect_gte(results_2a$p.value, 0.70)
+
+    testthat::expect_length(results_1$x_2$confidence_interval, 2L)
+    testthat::expect_lte(abs(results_1$x_2$p_value - results_2b$p.value), 0.05)
+    testthat::expect_lte(results_2a$p.value, 0.30)
+    testthat::expect_gte(results_2a$p.value, 0.25)
+  }
+)
 
 # Test with different summary statistic.
+testthat::test_that(
+  "Two-sided location test functions correctly with different summary functions",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+
+    # Small difference -- standard deviation for the current seed is about 0.80.
+    results_1 <- emp.test::location_test(
+      x_1 = x_1,
+      location = 0.8,
+      summary_function = stats::sd
+    )
+    testthat::expect_length(results_1[[1L]]$confidence_interval, 2L)
+    testthat::expect_lte(results_1$x_1$p.value, 0.80)
+    testthat::expect_gte(results_2$x_1$p.value, 0.75)
+  }
+)
+
 
 # Test without summary statistic.
+testthat::test_that(
+  "Two-sided location test functions correctly without summary function",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+
+    # Small difference -- standard deviation for the current seed is about 0.80.
+    results_1 <- emp.test::location_test(
+      x_1 = x_1,
+      location = 0.8,
+      summary_function = NULL
+    )
+    testthat::expect_length(results_1[[1L]]$confidence_interval, 2L)
+    testthat::expect_lte(results_1$x_1$p.value, 0.80)
+    testthat::expect_gte(results_2$x_1$p.value, 0.75)
+  }
+)
