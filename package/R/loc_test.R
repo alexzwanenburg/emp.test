@@ -134,7 +134,7 @@ setMethod(
   ) {
     # Compute difference between groups. Pre-sort so that both quantile
     # and
-    x <- sort(x_1 - object@location)
+    x <- sort(x_1)
 
     # Compute confidence interval.
     ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
@@ -142,13 +142,13 @@ setMethod(
     if (hypothesis_test_only) {
       # Test null hypothesis and compute 0-value.
       if (object@alternative == "two_sided") {
-        reject_null <- ci[1L] >= 0.0 || (ci[2L] <= 0.0)
+        reject_null <- ci[1L] >= object@location || (ci[2L] <= object@location)
 
       } else if (object@alternative == "less") {
-        reject_null <- ci[1L] <= 0.0
+        reject_null <- ci[1L] <= object@location
 
       } else if (object@alternative == "greater") {
-        reject_null <- ci[1L] >= 0.0
+        reject_null <- ci[1L] >= object@location
 
       } else {
         ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
@@ -162,21 +162,21 @@ setMethod(
     # Compute percentiles on x. Note that this corresponds to type = 8.
     p <- (seq_along(x) - 1.0 / 3.0) / (length(x) + 1.0 /3.0)
     p_value <- suppressWarnings(
-      stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+      stats::approx(x = x, y = p, xout = object@location, rule = 2L)$y
     )
 
     # Test null hypothesis and compute 0-value.
     if (object@alternative == "two_sided") {
-      reject_null <- ci[1L] >= 0.0 || (ci[2L] <= 0.0)
+      reject_null <- ci[1L] >= object@location || (ci[2L] <= object@location)
       p_value <- min(c(p_value, 1.0 - p_value)) * 2.0
 
     } else if (object@alternative == "less") {
-      reject_null <- ci[1L] <= 0.0
+      reject_null <- ci[1L] <= object@location
       ci <- c(-Inf, ci[1L])
       p_value <- 1.0 - p_value
 
     } else if (object@alternative == "greater") {
-      reject_null <- ci[1L] >= 0.0
+      reject_null <- ci[1L] >= object@location
       ci <- c(ci[1L], Inf)
       p_value <- p_value
 
@@ -188,7 +188,9 @@ setMethod(
       "effect" = effect,
       "confidence_interval" = ci,
       "p_value" = p_value,
-      "reject_null" = reject_null
+      "reject_null" = reject_null,
+      "alternative" = object@alternative,
+      "location" = object@location
     ))
   }
 )
