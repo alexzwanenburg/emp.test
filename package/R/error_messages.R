@@ -183,6 +183,7 @@
 }
 
 
+
 ..error_reached_unreachable_code <- function(..., call = rlang::caller_env()) {
   message_string <- paste0(
     "This error should not occur, as this code should not be reachable by design. ",
@@ -193,6 +194,23 @@
   rlang::abort(
     message = message_string,
     class = c("emp_test_error", "developer_error"),
+    call = call
+  )
+}
+
+
+
+..error_missing_variable <- function(
+    var_name,
+    call = rlang::caller_env()
+) {
+  message_string <- paste0(
+    var_name, " argument is missing and needs to be provided."
+  )
+
+  rlang::abort(
+    message = message_string,
+    class = c("emp_test_error", "input_argument_error"),
     call = call
   )
 }
