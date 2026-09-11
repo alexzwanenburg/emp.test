@@ -40,7 +40,7 @@ setMethod(
     if (rlang::is_missing(alternative)) ..error_missing_variable("alternative")
     if (rlang::is_missing(summary_function)) ..error_missing_variable("summary_function")
     if (rlang::is_missing(summary_function_args)) ..error_missing_variable("summary_function_args")
-    browser()
+
     # Format data.
     .Object@input_data <- format_data(data = data)
 

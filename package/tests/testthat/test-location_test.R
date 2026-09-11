@@ -267,6 +267,17 @@ testthat::test_that(
     testthat::expect_length(results_1[[1L]]$confidence_interval, 2L)
     testthat::expect_lte(results_1$x_1$p_value, 0.80)
     testthat::expect_gte(results_1$x_1$p_value, 0.75)
+
+    # Percentile.
+    results_2 <- emp.test::location_test(
+      x_1 = x_1,
+      location = 0.9,
+      summary_function = stats::quantile,
+      summary_function_args = list("probs" = 0.75)
+    )
+    testthat::expect_length(results_2$x_1$confidence_interval, 2L)
+    testthat::expect_lte(results_2$x_1$p_value, 0.20)
+    testthat::expect_gte(results_2$x_1$p_value, 0.15)
   }
 )
 
