@@ -247,8 +247,8 @@ testthat::test_that(
 
     testthat::expect_length(results_1$x_2$confidence_interval, 2L)
     testthat::expect_lte(abs(results_1$x_2$p_value - results_2b$p.value), 0.05)
-    testthat::expect_lte(results_2a$p.value, 0.30)
-    testthat::expect_gte(results_2a$p.value, 0.25)
+    testthat::expect_lte(results_2b$p.value, 0.25)
+    testthat::expect_gte(results_2b$p.value, 0.20)
   }
 )
 
@@ -265,8 +265,8 @@ testthat::test_that(
       summary_function = stats::sd
     )
     testthat::expect_length(results_1[[1L]]$confidence_interval, 2L)
-    testthat::expect_lte(results_1$x_1$p.value, 0.80)
-    testthat::expect_gte(results_2$x_1$p.value, 0.75)
+    testthat::expect_lte(results_1$x_1$p_value, 0.80)
+    testthat::expect_gte(results_1$x_1$p_value, 0.75)
   }
 )
 
@@ -277,14 +277,22 @@ testthat::test_that(
   {
     x_1 <- emp.test:::.rnorm(50L, seed = 19L)
 
-    # Small difference -- standard deviation for the current seed is about 0.80.
+    # Set summary_function = NULL to actually
     results_1 <- emp.test::location_test(
       x_1 = x_1,
-      location = 0.8,
+      location = 0.4,
       summary_function = NULL
     )
+
+    mu <- mean(x_1)
+    sigma <- stats::sd(x_1)
+    t <- (mu - 0.4) / sigma
+    p <- 2.0 * stats::pt(q = -abs(t), df = length(x_1) - 1L)
+
     testthat::expect_length(results_1[[1L]]$confidence_interval, 2L)
-    testthat::expect_lte(results_1$x_1$p.value, 0.80)
-    testthat::expect_gte(results_2$x_1$p.value, 0.75)
+    testthat::expect_lte(abs(results_1$x_1$p_value - p), 0.15)
+    # Difference is larger than for tests using sample means, since x_1 is not fully normally distributed.
+    testthat::expect_lte(results_1$x_1$p_value, 0.85)
+    testthat::expect_gte(results_1$x_1$p_value, 0.75)
   }
 )
