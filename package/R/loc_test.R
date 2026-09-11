@@ -67,6 +67,7 @@ setMethod(
     location,
     ...
   ) {
+    if (rlang::is_missing(location)) ..error_missing_variable("location")
     .Object@name <- "empirical location test"
 
     # Update with parent class first. This checks significance_level.

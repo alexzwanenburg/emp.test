@@ -55,6 +55,7 @@ setMethod(
     significance_level,
     ...
   ) {
+    if (rlang::is_missing(significance_level)) ..error_missing_variable("significance_level")
 
     # Check significance. Significance level cannot be equal to 1.0, because
     # that would not be meaningful.
