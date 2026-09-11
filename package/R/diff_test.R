@@ -284,7 +284,7 @@ setMethod(
     # Special case for point estimates.
     if (is.null(random_values)) return(object@input_data)
 
-    # The default is for the same samples to be randomly selected.
+    # For paired tests the same samples should be randomly selected.
     n_samples <- length(data[[1L]])
     sample_indices <- as.integer(ceiling(random_values[1L:n_samples] * n_samples))
 
@@ -292,9 +292,9 @@ setMethod(
     sample_indices[sample_indices < 1L] <- 1L
     sample_indices[sample_indices > n_samples] <- n_samples
 
+    # Select samples.
     sampled_data <- list()
     for (variable in names(data)) {
-      # Select samples.
       sampled_data[[variable]] <- data[[variable]][sample_indices]
     }
 
