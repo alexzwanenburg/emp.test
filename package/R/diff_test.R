@@ -49,7 +49,7 @@ setClass(
 )
 
 
-# initialize -------------------------------------------------------------------
+## initialize -------------------------------------------------------------------
 setMethod(
   "initialize",
   signature(.Object = "empiricalDiffTest"),
@@ -86,7 +86,7 @@ setMethod(
   }
 )
 
-# .test ------------------------------------------------------------------------
+## .test ------------------------------------------------------------------------
 setMethod(
   ".test",
   signature(object = "empiricalDiffTest"),
@@ -114,7 +114,7 @@ setMethod(
 )
 
 
-# ..test -----------------------------------------------------------------------
+## ..test -----------------------------------------------------------------------
 setMethod(
   "..test",
   signature(object = "empiricalDiffTest"),
@@ -188,7 +188,7 @@ setMethod(
 )
 
 
-# .compute_test_results --------------------------------------------------------
+## .compute_test_results --------------------------------------------------------
 setMethod(
   ".compute_test_results",
   signature(object = "empiricalDiffTest"),
@@ -207,5 +207,97 @@ setMethod(
     }
 
     return(results)
+  }
+)
+
+
+
+# empiricalPairedDiffTest object -----------------------------------------------
+setClass(
+  "empiricalPairedDiffTest",
+  contains = "empiricalDiffTest",
+)
+
+
+
+## initialize -------------------------------------------------------------------
+setMethod(
+  "initialize",
+  signature(.Object = "empiricalPairedDiffTest"),
+  function(
+    .Object,
+    ...
+  ) {
+    .Object <- callNextMethod()
+
+    # Replace name.
+    .Object@name <- "empirical paired difference test"
+
+    # Check that all data entries have the same length.
+    browser()
+    rlang::abort("Implement this check")
+
+    # Set n_draw_input_samples, which determines the number of random numbers
+    # that should be drawn for summaries.
+    .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
+
+    return(.Object)
+  }
+)
+
+
+## get_n_draw_input_samples ----------------------------------------------------
+setMethod(
+  "get_n_draw_input_samples",
+  signature(
+    object = "empiricalPairedDiffTest"
+  ),
+  function(object) {
+    if (is.null(object@input_data)) return(0L)
+
+    # The same samples should be drawn for each input.
+    return(length(object@input_data[[1L]]))
+  }
+)
+
+## get_n_draw_summary_samples method -------------------------------------------
+setMethod(
+  "get_n_draw_summary_samples",
+  signature(object = "empiricalPairedDiffTest"),
+  function(object) {
+    if (is.null(object@summary_data)) return(0L)
+
+    # The same samples should be drawn for each input.
+    return(length(object@summary_data[[1L]]))
+  }
+)
+
+## .sample_data ----------------------------------------------------------------
+setMethod(
+  ".sample_data",
+  signature(object = "empiricalPairedDiffTest"),
+  function(object, random_values, ...) {
+    data <- object@summary_data
+    if (is.null(data)) data <- object@input_data
+    if (is.null(random_values)) return(data)
+
+    # Special case for point estimates.
+    if (is.null(random_values)) return(object@input_data)
+
+    # The default is for the same samples to be randomly selected.
+    n_samples <- length(data[[1L]])
+    sample_indices <- as.integer(ceiling(random_values[1L:n_samples] * n_samples))
+
+    # These edge cases are highlu unlikely but not impossible.
+    sample_indices[sample_indices < 1L] <- 1L
+    sample_indices[sample_indices > n_samples] <- n_samples
+
+    sampled_data <- list()
+    for (variable in names(data)) {
+      # Select samples.
+      sampled_data[[variable]] <- data[[variable]][sample_indices]
+    }
+
+    return(sampled_data)
   }
 )
