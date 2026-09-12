@@ -140,6 +140,24 @@ setMethod(
     # Compute confidence interval.
     ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
 
+    # Early break in case the confidence interval is singular.
+    if (length(ci) == 2L) {
+      if (diff(ci) == 0.0) {
+        if (hypothesis_test_only) {
+          return(list("reject_null" = FALSE))
+
+        } else {
+          return(list(
+            "effect" = ci[1L],
+            "confidence_interval" = c(NA_real_, NA_real_),
+            "p_value" = NA_real_,
+            "reject_null" = FALSE,
+            "alternative" = object@alternative
+          ))
+        }
+      }
+    }
+
     if (hypothesis_test_only) {
       # Test null hypothesis and compute 0-value.
       if (object@alternative == "two_sided") {

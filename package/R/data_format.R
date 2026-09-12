@@ -167,3 +167,22 @@ format_data <- function(data) {
 
   return(invisible(TRUE))
 }
+
+
+
+.check_paired_input_data <- function(
+    data
+) {
+  variable_lengths <- lengths(data)
+  if (!all(variable_lengths == variable_lengths[1L])) {
+    rlang::abort(
+      message = paste0(
+        "Paired analysis expect variables with the same number of values. ",
+        "Found: variables with ", paste_s(variable_lengths), " instances."
+      ),
+      class = c("emp_test_error", "input_argument_error")
+    )
+  }
+
+  return(invisible(TRUE))
+}

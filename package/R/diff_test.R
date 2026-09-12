@@ -7,6 +7,7 @@ NULL
 #' @param ... description
 #' @param alternative description
 #' @param significance_level description
+#' @param paired description
 #' @param summary_function description
 #' @param summary_function_args description
 #'
@@ -16,18 +17,32 @@ difference_test <- function(
     ...,
     alternative = "two_sided",
     significance_level = 0.95,
+    paired = FALSE,
     summary_function = mean,
     summary_function_args = NULL
 ) {
-  # Create test object.
-  object <- methods::new(
-    "empiricalDiffTest",
-    data = list(...),
-    alternative = alternative,
-    significance_level = significance_level,
-    summary_function = summary_function,
-    summary_function_args = summary_function_args
-  )
+  if (paired) {
+    # Create test object for paired difference tests.
+    object <- methods::new(
+      "empiricalPairedDiffTest",
+      data = list(...),
+      alternative = alternative,
+      significance_level = significance_level,
+      summary_function = summary_function,
+      summary_function_args = summary_function_args
+    )
+
+  } else {
+    # Create test object for difference tests without paired data.
+    object <- methods::new(
+      "empiricalDiffTest",
+      data = list(...),
+      alternative = alternative,
+      significance_level = significance_level,
+      summary_function = summary_function,
+      summary_function_args = summary_function_args
+    )
+  }
 
   # Set the number of bootstraps.
   object@n_bootstraps <- 1000L
@@ -132,6 +147,24 @@ setMethod(
     # Compute confidence interval.
     ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
 
+    # Early break in case the confidence interval is singular.
+    if (length(ci) == 2L) {
+      if (diff(ci) == 0.0) {
+        if (hypothesis_test_only) {
+          return(list("reject_null" = FALSE))
+
+        } else {
+          return(list(
+            "effect" = ci[1L],
+            "confidence_interval" = c(NA_real_, NA_real_),
+            "p_value" = NA_real_,
+            "reject_null" = FALSE,
+            "alternative" = object@alternative
+          ))
+        }
+      }
+    }
+
     if (hypothesis_test_only) {
       # Test null hypothesis and compute 0-value.
       if (object@alternative == "two_sided") {
@@ -234,8 +267,7 @@ setMethod(
     .Object@name <- "empirical paired difference test"
 
     # Check that all data entries have the same length.
-    browser()
-    rlang::abort("Implement this check")
+    .check_paired_input_data(data = .Object@input_data)
 
     # Set n_draw_input_samples, which determines the number of random numbers
     # that should be drawn for summaries.
@@ -260,6 +292,7 @@ setMethod(
   }
 )
 
+
 ## get_n_draw_summary_samples method -------------------------------------------
 setMethod(
   "get_n_draw_summary_samples",
@@ -271,6 +304,7 @@ setMethod(
     return(length(object@summary_data[[1L]]))
   }
 )
+
 
 ## .sample_data ----------------------------------------------------------------
 setMethod(

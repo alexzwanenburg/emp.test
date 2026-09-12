@@ -8,6 +8,7 @@ difference_test(
   ...,
   alternative = "two_sided",
   significance_level = 0.95,
+  paired = FALSE,
   summary_function = mean,
   summary_function_args = NULL
 )
@@ -18,6 +19,8 @@ difference_test(
 \item{alternative}{description}
 
 \item{significance_level}{description}
+
+\item{paired}{description}
 
 \item{summary_function}{description}
 
