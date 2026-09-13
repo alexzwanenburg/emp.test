@@ -252,8 +252,8 @@ testthat::test_that(
     testthat::expect_lte(results_2b$p.value, 0.001)
 
     testthat::expect_length(results_1$`x_2 - x_3`$confidence_interval, 2L)
-    testthat::expect_lte(abs(results_1$`x_2 - x_3`$p_value - results_2b$p.value), 0.05)
-    testthat::expect_lte(results_2b$p.value, 0.001)
+    testthat::expect_lte(abs(results_1$`x_2 - x_3`$p_value - results_2c$p.value), 0.05)
+    testthat::expect_lte(results_2c$p.value, 0.02)
   }
 )
 
