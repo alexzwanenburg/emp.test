@@ -27,6 +27,7 @@ Collate:
     'generic_location_test.R'
     'diff_test.R'
     'emp.test-package.R'
+    'equivalence_test.R'
     'error_messages.R'
     'loc_test.R'
     'random.R'
