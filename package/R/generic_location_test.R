@@ -10,13 +10,15 @@ setClass(
     alternative = "character",
     percentiles = "numeric",
     summary_function = "ANY",
-    summary_function_args = "ANY"
+    summary_function_args = "ANY",
+    requires_summary_function = "logical"
   ),
   prototype = list(
     alternative = "two.sided",
     percentiles = NA_real_,
     summary_function = NULL,
-    summary_function_args = NULL
+    summary_function_args = NULL,
+    requires_summary_function = FALSE
   )
 )
 
@@ -55,6 +57,15 @@ setMethod(
 
     # Set percentiles.
     .Object <- .set_percentiles(object = .Object)
+
+    # Check that a summary function is set, if it is required.
+    if (is.null(summary_function) && .Object@requires_summary_function) {
+      rlang::abort(
+        message = paste0(
+          "The summary function cannot be empty for ", .Object@name, ". "
+        )
+      )
+    }
 
     # Check summary_function.
     if (!is.null(summary_function)) {

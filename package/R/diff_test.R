@@ -61,6 +61,10 @@ difference_test <- function(
 setClass(
   "empiricalDiffTest",
   contains = "empiricalGenericLocTest",
+  prototype = list(
+    name = "empirical difference test",
+    requires_summary_function = TRUE
+  )
 )
 
 
@@ -72,8 +76,6 @@ setMethod(
     .Object,
     ...
   ) {
-    .Object@name <- "empirical difference test"
-
     # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
 
@@ -83,15 +85,7 @@ setMethod(
       condition = c("at_least", "2")
     )
 
-    # Check that a summary function is set (unpaired empirical difference tests
-    # cannot operate on raw data).
-    if (is.null(.Object@summary_function)) {
-      rlang::abort(
-        message = paste0(
-          "The summary function cannot be empty for ", .Object@name, ". "
-        )
-      )
-    }
+
 
     # Set n_draw_input_samples, which determines the number of random numbers that
     # should be drawn for summaries,
@@ -249,6 +243,10 @@ setMethod(
 setClass(
   "empiricalPairedDiffTest",
   contains = "empiricalDiffTest",
+  prototype = list(
+    name =  "empirical paired difference test",
+    requires_summary_function = FALSE
+  )
 )
 
 
@@ -262,9 +260,6 @@ setMethod(
     ...
   ) {
     .Object <- callNextMethod()
-
-    # Replace name.
-    .Object@name <- "empirical paired difference test"
 
     # Check that all data entries have the same length.
     .check_paired_input_data(data = .Object@input_data)

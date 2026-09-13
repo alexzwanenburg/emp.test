@@ -53,7 +53,9 @@ setClass(
     location = "numeric"
   ),
   prototype = list(
-    location = NA_real_
+    name =  "empirical location test",
+    location = NA_real_,
+    requires_summary_function = FALSE
   )
 )
 
@@ -68,7 +70,6 @@ setMethod(
     ...
   ) {
     if (rlang::is_missing(location)) ..error_missing_variable("location")
-    .Object@name <- "empirical location test"
 
     # Update with parent class first. This checks significance_level.
     .Object <- callNextMethod()
