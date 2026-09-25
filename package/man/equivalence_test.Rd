@@ -7,7 +7,7 @@
 equivalence_test(
   ...,
   tolerance,
-  alternative = "not_equivalent",
+  alternative = "equivalent",
   significance_level = 0.95,
   paired = FALSE,
   summary_function = mean,
@@ -15,11 +15,12 @@ equivalence_test(
 )
 }
 \arguments{
-\item{...}{description}
+\item{...}{description; the first variable is used as control. The computed
+difference are between test and control groups (test - control).}
 
 \item{tolerance}{description}
 
-\item{alternative}{description one of "not_equivalent", "inferior" or "superior".}
+\item{alternative}{description one of "equivalent", "not_inferior" or "not_superior".}
 
 \item{significance_level}{description}
 

@@ -8,6 +8,7 @@ setClass(
   contains = "empiricalTest",
   slots = list(
     alternative = "character",
+    alternative_values = "character",
     percentiles = "numeric",
     summary_function = "ANY",
     summary_function_args = "ANY",
@@ -15,6 +16,7 @@ setClass(
   ),
   prototype = list(
     alternative = "two.sided",
+    alternative_values = c("two.sided", "two_sided", "greater", "less"),
     percentiles = NA_real_,
     summary_function = NULL,
     summary_function_args = NULL,
@@ -50,7 +52,7 @@ setMethod(
     .check_parameter_value_is_valid(
       x = alternative,
       var_name = "alternative",
-      values = c("two.sided", "two_sided", "greater", "less")
+      values = .Object@alternative_values
     )
     if (alternative == "two.sided") alternative <- "two-sided"
     .Object@alternative <- alternative

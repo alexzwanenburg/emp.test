@@ -119,6 +119,7 @@
 }
 
 
+
 .check_argument_length <- function(
     x,
     var_name,
@@ -189,7 +190,6 @@
 
   return(invisible(TRUE))
 }
-
 
 
 

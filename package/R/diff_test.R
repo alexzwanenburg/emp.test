@@ -85,8 +85,6 @@ setMethod(
       condition = c("at_least", "2")
     )
 
-
-
     # Set n_draw_input_samples, which determines the number of random numbers that
     # should be drawn for summaries,
     .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
