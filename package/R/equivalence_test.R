@@ -142,6 +142,43 @@ setMethod(
 
 
 
+## .test ------------------------------------------------------------------------
+setMethod(
+  ".test",
+  signature(object = "empiricalEquivalenceTest"),
+  function(
+    object,
+    data,
+    hypothesis_test_only = FALSE,
+    ...
+  ) {
+    test_output <- list()
+
+    # Iterate over combinations of groups.
+    for (groups in combn(names(data), m = 2L, simplify = FALSE)) {
+      results <- ..test(
+        object = object,
+        x_1 = data[[groups[1L]]],
+        x_2 = data[[groups[2L]]],
+        hypothesis_test_only = hypothesis_test_only
+      )
+
+      # Add control and test group.
+      if (!hypothesis_test_only) {
+        results$control_group <- groups[1L]
+        results$test_group <- groups[2L]
+      }
+
+      test_output[[paste0(groups[2L], " - ", paste0(groups[1L]))]] <- results
+    }
+
+    return(test_output)
+  }
+)
+
+
+
+
 ## ..test -----------------------------------------------------------------------
 setMethod(
   "..test",
@@ -168,7 +205,7 @@ setMethod(
       }
 
     } else if (rlang::is_function(object@tolerance)) {
-      # Compute tolerance based on
+      # Compute tolerance based on a user-provided function.
       tolerance <- mapply(
         object@tolerance,
         x_1,
