@@ -121,7 +121,7 @@ setMethod(
     } else if (is.numeric(tolerance)) {
       # Check that tolerance consists of one or two numeric values.
       .check_argument_length(
-        x = y,
+        x = tolerance,
         var_name = "tolerance",
         min = 1L,
         max = 2L
@@ -141,8 +141,22 @@ setMethod(
 )
 
 
+## .set_percentiles ------------------------------------------------------------
+setMethod(
+  ".set_percentiles",
+  signature(object = "empiricalEquivalenceTest"),
+  function(
+    object,
+    ...
+  ) {
+    # For equivalence tests
+    return(object)
+  }
+)
 
-## .test ------------------------------------------------------------------------
+
+
+## .test -----------------------------------------------------------------------
 setMethod(
   ".test",
   signature(object = "empiricalEquivalenceTest"),
@@ -199,9 +213,20 @@ setMethod(
         tolerance_upper <- rep.int(tolerance[2L], length(x_1))
 
       } else {
-        # Symmetric tolerance bounds.
-        tolerance_lower <- rep.int(-tolerance[1L], length(x_1))
-        tolerance_upper <- rep.int(tolerance[1L], length(x_1))
+        if (object@alternative == "equivalent") {
+          # Symmetric tolerance bounds.
+          tolerance_lower <- rep.int(-tolerance[1L], length(x_1))
+          tolerance_upper <- rep.int(tolerance[1L], length(x_1))
+
+        } else if (object@alternative == "not_inferior") {
+          tolerance_lower <- rep.int(tolerance[1L], length(x_1))
+
+        } else if (object@alternative == "not_superior") {
+          tolerance_upper <- rep.int(tolerance[1L], length(x_1))
+
+        } else {
+          ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+        }
       }
 
     } else if (rlang::is_function(object@tolerance)) {
@@ -226,19 +251,25 @@ setMethod(
     # Count the number of times we observe that observations according to the
     # null-hypothesis (the difference is outside of tolerance) are observed.
     if (object@alternative == "equivalent") {
-      p <- (x_2 - x_1 <= tolerance_lower || x_2 - x_1 > tolerance_upper)
+      # For consistency with the two one-sided test (TOST) procedure, the
+      # boundaries are tested separately.
+      p_lower <- x_2 - x_1 <= tolerance_lower
+      p_upper <- x_2 - x_1 >= tolerance_upper
+      p_value <- max(sum(p_lower), sum(p_upper)) / length(p_lower)
 
     } else if (object@alternative == "not_inferior") {
       p <- (x_2 - x_1 <= tolerance_lower)
+      p_value <- sum(p) / length(p)
 
     } else if (object@alternative == "not_superior") {
       p <- (x_2 - x_1 >= tolerance_upper)
+      p_value <- sum(p) / length(p)
 
     } else {
       ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
     }
-    p_value <- sum(p) / length(p)
-    reject_null <- p_value <= 1.0 - object@alternative
+
+    reject_null <- p_value <= 1.0 - object@significance_level
 
     if (hypothesis_test_only) {
       return(list("reject_null" = reject_null))
