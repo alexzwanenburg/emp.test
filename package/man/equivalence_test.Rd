@@ -74,5 +74,34 @@ instead of from summary descriptors.}
 htest object
 }
 \description{
-Bootstrap equivalence test
+Performs a two-sample equivalence test on variables.
+}
+\details{
+An equivalence test assesses the difference between two variables (samples),
+but from a different starting assumption than a difference test. Whereas
+difference tests assume that there is no difference between groups, an
+equivalence test assumes that there a non-marginal difference exists. That is,
+it tests for the absence of a meaningful difference.
+
+Equivalence tests are often performed using the two one-sided test (TOST)
+procedure. The bootstrap equivalence test generalises such tests by allowing
+a custom \code{summary_function}, dynamic tolerances, and not having any
+assumptions except for independence.
+
+The equivalence test (\code{alternative = "equivalent"}) has two null hypotheses:
+\eqn{H_{0a}: f(x_t) - f(x_c) \leq \delta_L}{H0a: f(x2) - f(x1) ≤ ΔL} or
+\eqn{H_{0b}: f(x_t) - f(x_c) \geq \delta_U}{H0a: f(x2) - f(x1) ≥ ΔU}.
+Here \eqn{f(x_c)}{f(x1)} and \eqn{f(x_t)}{f(x2)} are the summary descriptors
+of control variable \eqn{x_c}{x1} and target variable \eqn{x_t}{x2}, respectively.
+\eqn{\delta_L}{ΔL} and \eqn{\delta_U}{ΔU} are the lower and upper tolerances.
+
+The alternative hypothesis is \eqn{H_1: \delta_L < f(x_t) - f(x_c) < \delta_U}{H1: ΔL < f(x2) - f(x1) < ΔU}.
+
+An equivalence test with \code{alternative = "not_inferior"} is a non-inferiority
+test. The null hypothesis is \eqn{H_{0a}}{H0a}, and the alternative hypothesis
+is \eqn{H_1: \delta_L < f(x_t) - f(x_c)}{H1: ΔL < f(x2) - f(x1)}.
+
+An equivalence test with \code{alternative = "not_superior"} is a non-superiority
+test. The null hypothesis is \eqn{H_{0b}}{H0b}, and the alternative hypothesis
+is \eqn{H_1: f(x_t) - f(x_c) < \delta_U}{H1: f(x2) - f(x1) < ΔU}.
 }

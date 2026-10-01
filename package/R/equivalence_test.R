@@ -4,6 +4,8 @@ NULL
 
 #' Bootstrap equivalence test
 #'
+#' Performs a two-sample equivalence test on variables.
+#'
 #' @param ... Two or more numeric variables that are to be tested. If exactly
 #'   two variables are provided, the first variable is used as the control
 #'   group. The computed difference are between test and control groups (test -
@@ -34,6 +36,35 @@ NULL
 #' @param alternative The alternative hypothesis. One of `"equivalent"` (default),
 #'   `"not_inferior"` or `"not_superior"`.
 #' @inheritParams difference_test
+#'
+#' @details
+#' An equivalence test assesses the difference between two variables (samples),
+#' but from a different starting assumption than a difference test. Whereas
+#' difference tests assume that there is no difference between groups, an
+#' equivalence test assumes that there a non-marginal difference exists. That is,
+#' it tests for the absence of a meaningful difference.
+#'
+#' Equivalence tests are often performed using the two one-sided test (TOST)
+#' procedure. The bootstrap equivalence test generalises such tests by allowing
+#' a custom `summary_function`, dynamic tolerances, and not having any
+#' assumptions except for independence.
+#'
+#' The equivalence test (`alternative = "equivalent"`) has two null hypotheses:
+#' \eqn{H_{0a}: f(x_t) - f(x_c) \leq \delta_L}{H0a: f(x2) - f(x1) ≤ ΔL} or
+#' \eqn{H_{0b}: f(x_t) - f(x_c) \geq \delta_U}{H0a: f(x2) - f(x1) ≥ ΔU}.
+#' Here \eqn{f(x_c)}{f(x1)} and \eqn{f(x_t)}{f(x2)} are the summary descriptors
+#' of control variable \eqn{x_c}{x1} and target variable \eqn{x_t}{x2}, respectively.
+#' \eqn{\delta_L}{ΔL} and \eqn{\delta_U}{ΔU} are the lower and upper tolerances.
+#'
+#' The alternative hypothesis is \eqn{H_1: \delta_L < f(x_t) - f(x_c) < \delta_U}{H1: ΔL < f(x2) - f(x1) < ΔU}.
+#'
+#' An equivalence test with `alternative = "not_inferior"` is a non-inferiority
+#' test. The null hypothesis is \eqn{H_{0a}}{H0a}, and the alternative hypothesis
+#' is \eqn{H_1: \delta_L < f(x_t) - f(x_c)}{H1: ΔL < f(x2) - f(x1)}.
+#'
+#' An equivalence test with `alternative = "not_superior"` is a non-superiority
+#' test. The null hypothesis is \eqn{H_{0b}}{H0b}, and the alternative hypothesis
+#' is \eqn{H_1: f(x_t) - f(x_c) < \delta_U}{H1: f(x2) - f(x1) < ΔU}.
 #'
 #' @returns htest object
 #' @export
@@ -160,6 +191,9 @@ setMethod(
         class = c("emp_test_error", "input_argument_error")
       )
     }
+
+    # Set name
+    browser()
 
     return(.Object)
   }
@@ -309,5 +343,101 @@ setMethod(
       "reject_null" = reject_null,
       "alternative" = object@alternative
     ))
+  }
+)
+
+
+
+# empiricalPairedEquivalenceTest object ----------------------------------------
+setClass(
+  "empiricalPairedEquivalenceTest",
+  contains = "empiricalEquivalenceTest",
+  prototype = list(
+    requires_summary_function = FALSE
+  )
+)
+
+
+
+## initialize -------------------------------------------------------------------
+setMethod(
+  "initialize",
+  signature(.Object = "empiricalPairedDiffTest"),
+  function(
+    .Object,
+    ...
+  ) {
+    .Object <- callNextMethod()
+
+    # Check that all data entries have the same length.
+    .check_paired_input_data(data = .Object@input_data)
+
+    # Set n_draw_input_samples, which determines the number of random numbers
+    # that should be drawn for summaries.
+    .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
+
+    # Set name
+    browser()
+
+    return(.Object)
+  }
+)
+
+
+## get_n_draw_input_samples ----------------------------------------------------
+setMethod(
+  "get_n_draw_input_samples",
+  signature(
+    object = "empiricalPairedDiffTest"
+  ),
+  function(object) {
+    if (is.null(object@input_data)) return(0L)
+
+    # The same samples should be drawn for each input.
+    return(length(object@input_data[[1L]]))
+  }
+)
+
+
+## get_n_draw_summary_samples method -------------------------------------------
+setMethod(
+  "get_n_draw_summary_samples",
+  signature(object = "empiricalPairedDiffTest"),
+  function(object) {
+    if (is.null(object@summary_data)) return(0L)
+
+    # The same samples should be drawn for each input.
+    return(length(object@summary_data[[1L]]))
+  }
+)
+
+
+## .sample_data ----------------------------------------------------------------
+setMethod(
+  ".sample_data",
+  signature(object = "empiricalPairedDiffTest"),
+  function(object, random_values, ...) {
+    data <- object@summary_data
+    if (is.null(data)) data <- object@input_data
+    if (is.null(random_values)) return(data)
+
+    # Special case for point estimates.
+    if (is.null(random_values)) return(object@input_data)
+
+    # For paired tests the same samples should be randomly selected.
+    n_samples <- length(data[[1L]])
+    sample_indices <- as.integer(ceiling(random_values[1L:n_samples] * n_samples))
+
+    # These edge cases are highlu unlikely but not impossible.
+    sample_indices[sample_indices < 1L] <- 1L
+    sample_indices[sample_indices > n_samples] <- n_samples
+
+    # Select samples.
+    sampled_data <- list()
+    for (variable in names(data)) {
+      sampled_data[[variable]] <- data[[variable]][sample_indices]
+    }
+
+    return(sampled_data)
   }
 )
