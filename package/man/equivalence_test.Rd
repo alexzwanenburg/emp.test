@@ -67,7 +67,8 @@ If data are paired (\code{paired = TRUE}), \code{summary_function = NULL} is als
 valid. Difference tests are then computed from the input data directly
 instead of from summary descriptors.}
 
-\item{summary_function_args}{description}
+\item{summary_function_args}{A named list of arguments that is provided to
+\code{summary_function}.}
 }
 \value{
 htest object

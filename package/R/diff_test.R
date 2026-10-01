@@ -4,6 +4,8 @@ NULL
 
 #' Bootstrap difference test
 #'
+#' Performs a difference test on variables.
+#'
 #' @param ... Two or more numeric variables that are to be tested. If `paired =
 #'   FALSE` (default), the number of values in each variable can be different.
 #'   If `paired = TRUE`, the number of values in each variable must be the same.
@@ -28,7 +30,27 @@ NULL
 #'   If data are paired (`paired = TRUE`), `summary_function = NULL` is also
 #'   valid. Difference tests are then computed from the input data directly
 #'   instead of from summary descriptors.
-#' @param summary_function_args description
+#' @param summary_function_args A named list of arguments that is provided to
+#'   `summary_function`.
+#'
+#' @details
+#' A difference test assesses the difference between two variables (samples).
+#' An example of a difference test is Student's t-test, which assesses the difference
+#' in the means of two variables. The bootstrap difference test generalises such
+#' tests by allowing a custom `summary_function`, and not having any assumptions
+#' except for independence.
+#'
+#' The difference test has the null hypothesis
+#' \eqn{H_0: f(x_1) = f(x_2)}{H0: f(x1) = f(x2)}. Here \eqn{f(x_1)}{f(x1)} and
+#' \eqn{f(x_2)}{f(x2)} are the summary descriptors of input variables \eqn{x_1}{x1}
+#' and \eqn{x_2}{x2}, respectively.
+#'
+#' The alternative hypothesis depends on `alternative`. When `alternative = "two_sided"`,
+#' the alternative hypothesis is \eqn{H_1: f(x_1) \neq f(x_2)}{H1: f(x1) ≠ f(x2)}.
+#' For `alternative = "greater"` the alternative hypothesis is
+#' \eqn{H_1: f(x_1) > f(x_2)}{H1: f(x1) > f(x2)}.
+#' Finally, for `alternative = "less"` the alternative hypothesis is
+#' \eqn{H_1: f(x_1) < f(x_2)}{H1: f(x1) < f(x2)}.
 #'
 #' @returns htest object
 #' @export
