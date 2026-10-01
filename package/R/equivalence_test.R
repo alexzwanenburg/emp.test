@@ -2,22 +2,45 @@
 #' @include diff_test.R
 NULL
 
-#' Title
+#' Bootstrap equivalence test
 #'
-#' @param ... description; the first variable is used as control. The computed
-#'   difference are between test and control groups (test - control).
-#' @param tolerance description
-#' @param alternative description one of "equivalent", "not_inferior" or "not_superior".
-#' @param significance_level description
-#' @param paired description
-#' @param summary_function description
-#' @param summary_function_args description
+#' @param ... Two or more numeric variables that are to be tested. If exactly
+#'   two variables are provided, the first variable is used as the control
+#'   group. The computed difference are between test and control groups (test -
+#'   control). If `paired = FALSE` (default), the number of values in each
+#'   variable can be different. If `paired = TRUE`, the number of values in each
+#'   variable must be the same.
+#'
+#'   If more than two numeric variables are provided, tests are conducted in
+#'   pairwise combinations. In this case it is recommended to set symmetric
+#'   `tolerance` boundaries or generate this dynamically.
+#' @param tolerance Numeric values setting the lower and / or upper boundary for
+#'   the test. If `alternative = "equivalent`, one or two values are expected.
+#'   If one value is provided, the provided value is used as the upper boundary,
+#'   and its negative counterpart is used as the lower boundary, that is, the
+#'   boundaries are symmetric around 0. If `alternative = "not_inferior"`, one
+#'   value is expected, which is used as the lower boundary. If `alternative =
+#'   "not_superior"`, one value is expected, which is used as the upper
+#'   boundary.
+#'
+#'   Instead of providing numeric values, a custom function can be provided that
+#'   yields one or two numeric values (depending on `alternative`). The
+#'   **first two** arguments of the function are expected to be single numeric values
+#'   that were computed after applying `summary_function` to the a pair of
+#'   columns of the input data. This allows for dynamically computing tolerance
+#'   values based on summary statistic values.
+#' @param tolerance_function_args A named list of additional arguments supplied
+#'   to `tolerance`, if `tolerance` is a custom function.
+#' @param alternative The alternative hypothesis. One of `"equivalent"` (default),
+#'   `"not_inferior"` or `"not_superior"`.
+#' @inheritParams difference_test
 #'
 #' @returns htest object
 #' @export
 equivalence_test <- function(
     ...,
     tolerance,
+    tolerance_function_args = NULL,
     alternative = "equivalent",
     significance_level = 0.95,
     paired = FALSE,
@@ -30,6 +53,7 @@ equivalence_test <- function(
       "empiricalPairedEquivalenceTest",
       data = list(...),
       tolerance = tolerance,
+      tolerance_function_args = tolerance_function_args,
       alternative = alternative,
       significance_level = significance_level,
       summary_function = summary_function,
@@ -42,6 +66,7 @@ equivalence_test <- function(
       "empiricalEquivalenceTest",
       data = list(...),
       tolerance = tolerance,
+      tolerance_function_args = tolerance_function_args,
       alternative = alternative,
       significance_level = significance_level,
       summary_function = summary_function,

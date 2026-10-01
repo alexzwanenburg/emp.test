@@ -2,7 +2,7 @@
 % Please edit documentation in R/diff_test.R
 \name{difference_test}
 \alias{difference_test}
-\title{Title}
+\title{Bootstrap difference test}
 \usage{
 difference_test(
   ...,
@@ -14,15 +14,33 @@ difference_test(
 )
 }
 \arguments{
-\item{...}{description}
+\item{...}{Two or more numeric variables that are to be tested. If \code{paired = FALSE} (default), the number of values in each variable can be different.
+If \code{paired = TRUE}, the number of values in each variable must be the same.
 
-\item{alternative}{description}
+If more than two numeric variables are provided, tests are conducted for
+pairwise combinations of the variables.}
 
-\item{significance_level}{description}
+\item{alternative}{The alternative hypothesis. One of \code{"two_sided"}, \code{"greater"}
+and \code{"less"}.}
 
-\item{paired}{description}
+\item{significance_level}{Significance level for rejecting the null hypothesis.
+The default value is 0.95, which means that the null hypothesis is rejected
+if the p-value of the test is 0.05 or smaller. Must be a number between
+0.0 and 1.0.}
 
-\item{summary_function}{description}
+\item{paired}{Indicator for paired tests. By default, data is considered to
+be unpaired (\code{paired = FALSE}). If paired \code{paired = TRUE}, all numeric
+variables need to have the same number of values.}
+
+\item{summary_function}{Function for computing the summary descriptor from
+input variables. By default: \code{mean}, which means that mean values of the
+input variables are compared. The \code{summary_function} can be any function
+that yields a single numeric value for each input. The \strong{first} argument
+of the \code{summary_function} is expected to be a single input variable.
+
+If data are paired (\code{paired = TRUE}), \code{summary_function = NULL} is also
+valid. Difference tests are then computed from the input data directly
+instead of from summary descriptors.}
 
 \item{summary_function_args}{description}
 }
@@ -30,5 +48,5 @@ difference_test(
 htest object
 }
 \description{
-Title
+Bootstrap difference test
 }

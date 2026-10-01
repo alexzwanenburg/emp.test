@@ -2,13 +2,32 @@
 #' @include generic_location_test.R
 NULL
 
-#' Title
+#' Bootstrap difference test
 #'
-#' @param ... description
-#' @param alternative description
-#' @param significance_level description
-#' @param paired description
-#' @param summary_function description
+#' @param ... Two or more numeric variables that are to be tested. If `paired =
+#'   FALSE` (default), the number of values in each variable can be different.
+#'   If `paired = TRUE`, the number of values in each variable must be the same.
+#'
+#'   If more than two numeric variables are provided, tests are conducted for
+#'   pairwise combinations of the variables.
+#' @param alternative The alternative hypothesis. One of `"two_sided"`, `"greater"`
+#'   and `"less"`.
+#' @param significance_level Significance level for rejecting the null hypothesis.
+#'   The default value is 0.95, which means that the null hypothesis is rejected
+#'   if the p-value of the test is 0.05 or smaller. Must be a number between
+#'   0.0 and 1.0.
+#' @param paired Indicator for paired tests. By default, data is considered to
+#'   be unpaired (`paired = FALSE`). If paired `paired = TRUE`, all numeric
+#'   variables need to have the same number of values.
+#' @param summary_function Function for computing the summary descriptor from
+#'   input variables. By default: `mean`, which means that mean values of the
+#'   input variables are compared. The `summary_function` can be any function
+#'   that yields a single numeric value for each input. The **first** argument
+#'   of the `summary_function` is expected to be a single input variable.
+#'
+#'   If data are paired (`paired = TRUE`), `summary_function = NULL` is also
+#'   valid. Difference tests are then computed from the input data directly
+#'   instead of from summary descriptors.
 #' @param summary_function_args description
 #'
 #' @returns htest object

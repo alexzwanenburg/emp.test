@@ -2,7 +2,7 @@
 % Please edit documentation in R/loc_test.R
 \name{location_test}
 \alias{location_test}
-\title{Title}
+\title{Bootstrap location test}
 \usage{
 location_test(
   ...,
@@ -30,5 +30,5 @@ location_test(
 htest object
 }
 \description{
-Title
+Bootstrap location test
 }

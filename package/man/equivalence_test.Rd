@@ -2,11 +2,12 @@
 % Please edit documentation in R/equivalence_test.R
 \name{equivalence_test}
 \alias{equivalence_test}
-\title{Title}
+\title{Bootstrap equivalence test}
 \usage{
 equivalence_test(
   ...,
   tolerance,
+  tolerance_function_args = NULL,
   alternative = "equivalent",
   significance_level = 0.95,
   paired = FALSE,
@@ -15,18 +16,56 @@ equivalence_test(
 )
 }
 \arguments{
-\item{...}{description; the first variable is used as control. The computed
-difference are between test and control groups (test - control).}
+\item{...}{Two or more numeric variables that are to be tested. If exactly
+two variables are provided, the first variable is used as the control
+group. The computed difference are between test and control groups (test -
+control). If \code{paired = FALSE} (default), the number of values in each
+variable can be different. If \code{paired = TRUE}, the number of values in each
+variable must be the same.
 
-\item{tolerance}{description}
+If more than two numeric variables are provided, tests are conducted in
+pairwise combinations. In this case it is recommended to set symmetric
+\code{tolerance} boundaries or generate this dynamically.}
 
-\item{alternative}{description one of "equivalent", "not_inferior" or "not_superior".}
+\item{tolerance}{Numeric values setting the lower and / or upper boundary for
+the test. If \verb{alternative = "equivalent}, one or two values are expected.
+If one value is provided, the provided value is used as the upper boundary,
+and its negative counterpart is used as the lower boundary, that is, the
+boundaries are symmetric around 0. If \code{alternative = "not_inferior"}, one
+value is expected, which is used as the lower boundary. If \code{alternative = "not_superior"}, one value is expected, which is used as the upper
+boundary.
 
-\item{significance_level}{description}
+Instead of providing numeric values, a custom function can be provided that
+yields one or two numeric values (depending on \code{alternative}). The
+\strong{first two} arguments of the function are expected to be single numeric values
+that were computed after applying \code{summary_function} to the a pair of
+columns of the input data. This allows for dynamically computing tolerance
+values based on summary statistic values.}
 
-\item{paired}{description}
+\item{tolerance_function_args}{A named list of additional arguments supplied
+to \code{tolerance}, if \code{tolerance} is a custom function.}
 
-\item{summary_function}{description}
+\item{alternative}{The alternative hypothesis. One of \code{"equivalent"} (default),
+\code{"not_inferior"} or \code{"not_superior"}.}
+
+\item{significance_level}{Significance level for rejecting the null hypothesis.
+The default value is 0.95, which means that the null hypothesis is rejected
+if the p-value of the test is 0.05 or smaller. Must be a number between
+0.0 and 1.0.}
+
+\item{paired}{Indicator for paired tests. By default, data is considered to
+be unpaired (\code{paired = FALSE}). If paired \code{paired = TRUE}, all numeric
+variables need to have the same number of values.}
+
+\item{summary_function}{Function for computing the summary descriptor from
+input variables. By default: \code{mean}, which means that mean values of the
+input variables are compared. The \code{summary_function} can be any function
+that yields a single numeric value for each input. The \strong{first} argument
+of the \code{summary_function} is expected to be a single input variable.
+
+If data are paired (\code{paired = TRUE}), \code{summary_function = NULL} is also
+valid. Difference tests are then computed from the input data directly
+instead of from summary descriptors.}
 
 \item{summary_function_args}{description}
 }
@@ -34,5 +73,5 @@ difference are between test and control groups (test - control).}
 htest object
 }
 \description{
-Title
+Bootstrap equivalence test
 }

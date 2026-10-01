@@ -2,7 +2,7 @@
 #' @include generic_location_test.R
 NULL
 
-#' Title
+#' Bootstrap location test
 #'
 #' @param ... description
 #' @param location description
