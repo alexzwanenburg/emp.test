@@ -126,6 +126,7 @@ setClass(
     tolerance_function_args = "ANY"
   ),
   prototype = list(
+    # name is set within the initialize method (depends on alternative)
     alternative_values = c("equivalent", "not_inferior", "not_superior"),
     tolerance = NULL,
     tolerance_function_args = NULL
@@ -205,11 +206,10 @@ setMethod(
     # Set name
     .Object@name <- switch(
       .Object@alternative,
-      "equivalent" = "bootstrap equivalence test",
-      "not_inferior" = "bootstrap non-inferiority test",
-      "not_superior" = "bootstrap non-superiority test"
+      "equivalent" = "bootstrap (two-sample) equivalence test",
+      "not_inferior" = "bootstrap (two-sample) non-inferiority test",
+      "not_superior" = "bootstrap (two-sample) non-superiority test"
     )
-    browser()
 
     return(.Object)
   }
@@ -314,12 +314,26 @@ setMethod(
         SIMPLIFY = FALSE,
         USE.NAMES = FALSE
       )
-      if (length(tolerance[[1L]]) > 1L) {
+      if (object@alternative == "equivalent") {
+        if (length(tolerance[[1L]]) > 1L) {
+          tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
+          tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
+        } else {
+          tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
+          tolerance_lower <- -tolerance_upper
+        }
+      } else if (object@alternative == "not_inferior") {
         tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
-        tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
+
+      } else if (object@alternative == "not_superior") {
+        if (length(tolerance[[1L]]) > 1L) {
+          tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
+        } else {
+          tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
+        }
+
       } else {
-        tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
-        tolerance_lower <- -tolerance_upper
+        ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
       }
     }
 
@@ -378,7 +392,7 @@ setClass(
 ## initialize -------------------------------------------------------------------
 setMethod(
   "initialize",
-  signature(.Object = "empiricalPairedDiffTest"),
+  signature(.Object = "empiricalPairedEquivalenceTest"),
   function(
     .Object,
     ...
@@ -393,6 +407,12 @@ setMethod(
     .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
 
     # Set name
+    .Object@name <- switch(
+      .Object@alternative,
+      "equivalent" = "paired (two-sample) bootstrap equivalence test",
+      "not_inferior" = "paired (two-sample) bootstrap non-inferiority test",
+      "not_superior" = "paired (two-sample) bootstrap non-superiority test"
+    )
     browser()
 
     return(.Object)
@@ -404,7 +424,7 @@ setMethod(
 setMethod(
   "get_n_draw_input_samples",
   signature(
-    object = "empiricalPairedDiffTest"
+    object = "empiricalPairedEquivalenceTest"
   ),
   function(object) {
     if (is.null(object@input_data)) return(0L)
@@ -418,7 +438,7 @@ setMethod(
 ## get_n_draw_summary_samples method -------------------------------------------
 setMethod(
   "get_n_draw_summary_samples",
-  signature(object = "empiricalPairedDiffTest"),
+  signature(object = "empiricalPairedEquivalenceTest"),
   function(object) {
     if (is.null(object@summary_data)) return(0L)
 
@@ -431,7 +451,7 @@ setMethod(
 ## .sample_data ----------------------------------------------------------------
 setMethod(
   ".sample_data",
-  signature(object = "empiricalPairedDiffTest"),
+  signature(object = "empiricalPairedEquivalenceTest"),
   function(object, random_values, ...) {
     data <- object@summary_data
     if (is.null(data)) data <- object@input_data

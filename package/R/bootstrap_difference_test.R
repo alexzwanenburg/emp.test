@@ -103,7 +103,7 @@ setClass(
   "empiricalDiffTest",
   contains = "empiricalGenericLocTest",
   prototype = list(
-    name = "bootstrap difference test",
+    name = "bootstrap (two-sample) difference test",
     requires_summary_function = TRUE
   )
 )
@@ -283,7 +283,7 @@ setClass(
   "empiricalPairedDiffTest",
   contains = "empiricalDiffTest",
   prototype = list(
-    name =  "paired bootstrap difference test",
+    name =  "paired (two-sample) bootstrap difference test",
     requires_summary_function = FALSE
   )
 )

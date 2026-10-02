@@ -4,13 +4,6 @@ testthat::test_that(
     x_1 <- emp.test:::.rnorm(50L, seed = 19L)
     x_2 <- x_1
 
-    # Small tolerance.
-    results_1 <- emp.test::equivalence_test(
-      x_1 = x_1,
-      x_2 = x_2,
-      tolerance = 0.2
-    )
-
     # Two one-sided test procedure.
     ## Compute pooled standard deviation.
     sd_pooled <- sqrt((
@@ -31,53 +24,194 @@ testthat::test_that(
     p_upper <- stats::pt(t_upper, df, lower.tail = TRUE)
     p_value <- max(p_lower, p_upper)
 
+    # Comparison with two one-sided test procedure.
+    results_1 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = 0.2
+    )
+
     testthat::expect_lte(abs(results_1$`x_2 - x_1`$p_value - p_value), 0.01)
     testthat::expect_lte(p_value, 0.11)
     testthat::expect_gte(p_value, 0.09)
 
-    # Small tolerance.
+    # Larger tolerance --> lower p-value
+    results_2 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = 0.3
+    )
+    testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
+
+    # With two tolerances.
+    results_3 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = c(-0.3, 0.2)
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_3$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function -- in this case the same tolerance as above.
+    tol_fun <- function(x1, x2) (return(c(-0.3, 0.2)))
+    results_4 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function with extra arguments.
+    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.3, 0.2)) else return(c(-0.1, 0.1)))
+    results_5 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = TRUE)
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+
+    results_6 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = FALSE)
+    )
+    testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+  }
+)
+
+
+testthat::test_that(
+  "Non-inferiority test functions correctly",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+    x_2 <- x_1
+
+    # Comparison with two one-sided test procedure.
+    results_1 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = -0.2,
+      alternative = "not_inferior"
+    )
+
+    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.11)
+    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.09)
+
+    # Larger tolerance --> lower p-value
+    results_2 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = -0.3,
+      alternative = "not_inferior"
+    )
+    testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
+
+    # With two tolerances (technically not ok)
+    results_3 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = c(-0.2, 0.3),
+      alternative = "not_inferior"
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_3$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function -- in this case the same tolerance as above.
+    tol_fun <- function(x1, x2) (return(-0.2))
+    results_4 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      alternative = "not_inferior"
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function with extra arguments.
+    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.2, 0.3)) else return(c(-0.1, 0.1)))
+    results_5 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = TRUE),
+      alternative = "not_inferior"
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+
+    results_6 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = FALSE),
+      alternative = "not_inferior"
+    )
+    testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+  }
+)
+
+
+testthat::test_that(
+  "Non-superiority test functions correctly",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+    x_2 <- x_1
+
+    # Comparison with two one-sided test procedure.
     results_1 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
       tolerance = 0.2,
-      alternative = "not_inferior"
+      alternative = "not_superior"
     )
 
+    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.11)
+    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.09)
 
-    # No difference.
-    results_1 <- emp.test::difference_test(
+    # Larger tolerance --> lower p-value
+    results_2 <- emp.test::equivalence_test(
       x_1 = x_1,
-      x_2 = x_1
+      x_2 = x_2,
+      tolerance = 0.3,
+      alternative = "not_superior"
     )
-    results_2 <- stats::t.test(
-      x = x_1,
-      y = x_1
-    )
-    testthat::expect_lte(abs(results_1[[1L]]$p_value - results_2$p.value), 0.05)
-    testthat::expect_equal(results_2$p.value, 1.00)
+    testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
 
-    # Medium difference
-    results_1 <- emp.test::difference_test(
+    # With two tolerances (technically not ok)
+    results_3 <- emp.test::equivalence_test(
       x_1 = x_1,
-      x_2 = x_1 + 0.4
+      x_2 = x_2,
+      tolerance = c(-0.2, 0.2),
+      alternative = "not_superior"
     )
-    results_2 <- stats::t.test(
-      x = x_1,
-      y = x_1 + 0.4
-    )
-    testthat::expect_lte(abs(results_1[[1L]]$p_value - results_2$p.value), 0.02)
-    testthat::expect_lte(results_2$p.value, 0.05)
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_3$`x_2 - x_1`$p_value)
 
-    # Large difference
-    results_1 <- emp.test::difference_test(
+    # Tolerance using a function -- in this case the same tolerance as above.
+    tol_fun <- function(x1, x2) (return(0.2))
+    results_4 <- emp.test::equivalence_test(
       x_1 = x_1,
-      x_2 = x_1 + 1.0
+      x_2 = x_2,
+      tolerance = tol_fun,
+      alternative = "not_superior"
     )
-    results_2 <- stats::t.test(
-      x = x_1,
-      y = x_1 + 1.0
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function with extra arguments.
+    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.3, 0.2)) else return(c(-0.1, 0.1)))
+    results_5 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = TRUE),
+      alternative = "not_superior"
     )
-    testthat::expect_lte(abs(results_1[[1L]]$p_value - results_2$p.value), 0.01)
-    testthat::expect_lte(results_2$p.value, 0.001)
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+
+    results_6 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      tolerance_function_args = list("flag" = FALSE),
+      alternative = "not_superior"
+    )
+    testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
   }
 )
