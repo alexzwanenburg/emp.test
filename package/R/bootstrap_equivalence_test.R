@@ -1,5 +1,5 @@
 #' @include generic_test.R
-#' @include diff_test.R
+#' @include bootstrap_difference_test.R
 NULL
 
 #' Bootstrap equivalence test
@@ -186,13 +186,29 @@ setMethod(
       .Object@tolerance <- tolerance
 
     } else {
+      msg <- "tolerance must be one "
+      if (.Object@alternative == "equivalent") {
+        msg <- c(msg, "or two (lower, upper tolerance) numeric values ")
+      } else if (.Object@alternative == "not_inferior") {
+        msg <- c(msg, "(lower tolerance) numeric value ")
+      } else if (.Object@alternative == "not_superior") {
+        msg <- c(msg, "(upper tolerance) numeric value ")
+      }
+      msg <- c(msg, "or a function that yields such values.", collapse = "")
+
       rlang::abort(
-        message = "tolerance must be one or two (lower, upper tolerance) numeric values or a function that yields such values",
+        message = paste0(msg),
         class = c("emp_test_error", "input_argument_error")
       )
     }
 
     # Set name
+    .Object@name <- switch(
+      .Object@alternative,
+      "equivalent" = "bootstrap equivalence test",
+      "not_inferior" = "bootstrap non-inferiority test",
+      "not_superior" = "bootstrap non-superiority test"
+    )
     browser()
 
     return(.Object)

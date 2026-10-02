@@ -21,14 +21,14 @@ Imports:
   rstream
 Config/roxygen2/version: 8.1.0
 Collate: 
-    'checks.R'
-    'data_format.R'
     'generic_test.R'
     'generic_location_test.R'
-    'diff_test.R'
+    'bootstrap_difference_test.R'
+    'bootstrap_equivalence_test.R'
+    'bootstrap_location_test.R'
+    'checks.R'
+    'data_format.R'
     'emp.test-package.R'
-    'equivalence_test.R'
     'error_messages.R'
-    'loc_test.R'
     'random.R'
     'utils.R'

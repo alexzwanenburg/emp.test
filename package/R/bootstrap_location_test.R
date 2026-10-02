@@ -53,7 +53,7 @@ setClass(
     location = "numeric"
   ),
   prototype = list(
-    name =  "empirical location test",
+    name =  "bootstrap (one-sample) location test",
     location = NA_real_,
     requires_summary_function = FALSE
   )
