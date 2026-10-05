@@ -5,10 +5,10 @@
     x_1,
     x_2 = NULL
 ) {
-  if (!class(object) %in% c("empiricalEquivalenceTest", "empiricalEquivalenceLocTest")) {
+  if (!class(object) %in% c("empiricalEquivalenceTest", "empiricalPairedEquivalenceTest", "empiricalEquivalenceLocTest")) {
     ..error_reached_unreachable_code(paste0(
-      "object should be empiricalEquivalenceTest or empiricalEquivalenceLocTest. ",
-      "Found: ", class(object)
+      "object should be empiricalEquivalenceTest, empiricalPairedEquivalenceTest, ",
+      "or empiricalEquivalenceLocTest. Found: ", class(object)
     ))
   }
 
@@ -82,8 +82,11 @@
   x_1,
   x_2 = NULL
 ) {
-  if (!class(object) %in% c("empiricalEquivalenceTest", "empiricalEquivalenceLocTest")) {
-    ..error_reached_unreachable_code("object should be empiricalEquivalenceTest or empiricalEquivalenceLocTest. Found: ", class(object))
+  if (!class(object) %in% c("empiricalEquivalenceTest", "empiricalPairedEquivalenceTest", "empiricalEquivalenceLocTest")) {
+    ..error_reached_unreachable_code(paste0(
+      "object should be empiricalEquivalenceTest, empiricalPairedEquivalenceTest, ",
+      "or empiricalEquivalenceLocTest. Found: ", class(object)
+    ))
   }
 
   # Initial values

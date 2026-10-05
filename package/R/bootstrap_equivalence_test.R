@@ -319,7 +319,6 @@ setMethod(
       "not_inferior" = "paired (two-sample) bootstrap non-inferiority test",
       "not_superior" = "paired (two-sample) bootstrap non-superiority test"
     )
-    browser()
 
     return(.Object)
   }
