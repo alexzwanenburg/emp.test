@@ -215,3 +215,11 @@ testthat::test_that(
     testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
   }
 )
+
+
+testthat::test_that(
+  "Equivalence test functions correctly with more than 2 variables",
+  {
+
+  }
+)
