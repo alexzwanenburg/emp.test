@@ -279,63 +279,14 @@ setMethod(
     hypothesis_test_only = FALSE,
     ...
   ) {
-    # Compute or set tolerance values.
-    if (is.numeric(object@tolerance)) {
-      tolerance <- object@tolerance
-      if (length(tolerance) > 1L) {
-        # Asymmetric tolerance bounds
-        tolerance_lower <- rep.int(tolerance[1L], length(x_1))
-        tolerance_upper <- rep.int(tolerance[2L], length(x_1))
-
-      } else {
-        if (object@alternative == "equivalent") {
-          # Symmetric tolerance bounds.
-          tolerance_lower <- rep.int(-tolerance[1L], length(x_1))
-          tolerance_upper <- rep.int(tolerance[1L], length(x_1))
-
-        } else if (object@alternative == "not_inferior") {
-          tolerance_lower <- rep.int(tolerance[1L], length(x_1))
-
-        } else if (object@alternative == "not_superior") {
-          tolerance_upper <- rep.int(tolerance[1L], length(x_1))
-
-        } else {
-          ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
-        }
-      }
-
-    } else if (rlang::is_function(object@tolerance)) {
-      # Compute tolerance based on a user-provided function.
-      tolerance <- mapply(
-        object@tolerance,
-        x_1,
-        x_2,
-        MoreArgs = object@tolerance_function_args,
-        SIMPLIFY = FALSE,
-        USE.NAMES = FALSE
-      )
-      if (object@alternative == "equivalent") {
-        if (length(tolerance[[1L]]) > 1L) {
-          tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
-          tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
-        } else {
-          tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
-          tolerance_lower <- -tolerance_upper
-        }
-      } else if (object@alternative == "not_inferior") {
-        tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
-
-      } else if (object@alternative == "not_superior") {
-        if (length(tolerance[[1L]]) > 1L) {
-          tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
-        } else {
-          tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
-        }
-
-      } else {
-        ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
-      }
-    }
+    # Get tolerance bounds
+    tolerance <- .get_tolerance_bounds(
+      object = object,
+      x_1 = x_1,
+      x_2 = x_2
+    )
+    tolerance_lower <- tolerance$tolerance_lower
+    tolerance_upper <- tolerance$tolerance_upper
 
     # Count the number of times we observe that observations according to the
     # null-hypothesis (the difference is outside of tolerance) are observed.

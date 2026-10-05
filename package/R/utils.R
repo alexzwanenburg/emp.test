@@ -29,6 +29,7 @@ paste_s <- function(...) {
 }
 
 
+
 aggregate_results <- function(x) {
   # Flatten list (is chunked by sets of bootstraps).
   x <- unlist(x, recursive = FALSE)
