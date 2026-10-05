@@ -37,7 +37,8 @@ testthat::test_that(
     results_2 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
-      tolerance = 0.3
+      tolerance = 0.3,
+      paired = TRUE
     )
     testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
 
@@ -45,26 +46,29 @@ testthat::test_that(
     results_3 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
-      tolerance = c(-0.3, 0.2)
+      tolerance = c(-0.3, 0.1),
+      paired = TRUE
     )
     testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_3$`x_2 - x_1`$p_value)
 
     # Tolerance using a function -- in this case the same tolerance as above.
-    tol_fun <- function(x1, x2) (return(c(-0.3, 0.2)))
+    tol_fun <- function(x1, x2) (return(c(-0.3, 0.1)))
     results_4 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
-      tolerance = tol_fun
+      tolerance = tol_fun,
+      paired = TRUE
     )
     testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
 
     # Tolerance using a function with extra arguments.
-    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.3, 0.2)) else return(c(-0.1, 0.1)))
+    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.3, 0.1)) else return(c(-0.05, 0.05)))
     results_5 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
       tolerance = tol_fun,
-      tolerance_function_args = list("flag" = TRUE)
+      tolerance_function_args = list("flag" = TRUE),
+      paired = TRUE
     )
     testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
 
@@ -72,7 +76,8 @@ testthat::test_that(
       x_1 = x_1,
       x_2 = x_2,
       tolerance = tol_fun,
-      tolerance_function_args = list("flag" = FALSE)
+      tolerance_function_args = list("flag" = FALSE),
+      paired = TRUE
     )
     testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
   }
