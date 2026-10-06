@@ -52,3 +52,34 @@ aggregate_results <- function(x) {
 
   return(group_list)
 }
+
+
+
+match_function_name <- function(fun) {
+  # Function that can be used to look-up the function provided as the summary
+  # function.
+
+  # Escape for primitive functions (which cannot be identified).
+  if (is.null(environment(fun))) return(NULL)
+
+  # Identify the function through look-up in the environment where the function
+  # exists.
+  function_name <- names(which(
+    sapply(
+      ls(envir = environment(fun)),
+      function(x, fun) {
+        obj <- tryCatch(
+          get(x),
+          error = identity
+        )
+        if (inherits(obj, "error")) return(FALSE)
+        if (!is.function(obj)) return(FALSE)
+        if (identical(obj, fun)) return(TRUE)
+        return(FALSE)
+      },
+      fun = fun
+    )
+  ))
+
+  return(function_name)
+}
