@@ -56,6 +56,39 @@ setMethod(
 
 
 
+## .set_percentiles ------------------------------------------------------------
+setMethod(
+  ".set_percentiles",
+  signature(object = "empiricalEquivalenceLocTest"),
+  function(
+    object,
+    ...
+  ) {
+    if (object@alternative == "equivalent") {
+      # group 1 has either smaller or larger summary statistic than group 2
+      # by default (0.05, 0.95)
+      pctl <- c(1.0 - object@significance_level, object@significance_level)
+
+    } else if (object@alternative == "not_inferior") {
+      # by default (0.05)
+      pctl <- 1.0 - object@significance_level
+
+    } else if (object@alternative == "not_superior") {
+      # by default (0.95)
+      pctl <- object@significance_level
+
+    } else {
+      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+    }
+
+    object@percentiles <- pctl
+
+    return(object)
+  }
+)
+
+
+
 ## ..test -----------------------------------------------------------------------
 setMethod(
   "..test",
@@ -104,9 +137,16 @@ setMethod(
     # Compute effect.
     effect <- stats::median(x_1, type = 8L)
 
+    # Compute confidence interval for effect.
+    ci <- stats::quantile(x_1, probs = object@percentiles, type = 8L, names = FALSE)
+    if (object@alternative == "not_inferior") ci <- c(ci[1L], Inf)
+    if (object@alternative == "not_superior") ci <- c(-Inf, ci[1L])
+
     return(list(
       "effect" = effect,
       "p_value" = p_value,
+      "confidence_interval" = ci,
+      "confidence_interval_percentiles" = object@percentiles,
       "reject_null" = reject_null,
       "alternative" = object@alternative
     ))
