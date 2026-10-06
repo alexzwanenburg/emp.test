@@ -291,11 +291,11 @@ testthat::test_that(
       x_1 = x_1,
       tolerance = 0.20
     )
-    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.45)
-    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.43)
+    testthat::expect_lte(results_1$x_1$p_value, 0.45)
+    testthat::expect_gte(results_1$x_1$p_value, 0.43)
 
     # The direct difference should have a higher p-value than the difference of
     # the means.
-    testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
+    testthat::expect_gt(results_1$x_1$p_value, results_2$x_1$p_value)
   }
 )
