@@ -151,6 +151,7 @@ setMethod(
           return(list(
             "effect" = ci[1L],
             "confidence_interval" = c(NA_real_, NA_real_),
+            "confidence_interval_percentiles" = object@percentiles,
             "p_value" = NA_real_,
             "reject_null" = FALSE,
             "alternative" = object@alternative
@@ -207,6 +208,7 @@ setMethod(
     return(list(
       "effect" = effect,
       "confidence_interval" = ci,
+      "confidence_interval_percentiles" = object@percentiles,
       "p_value" = p_value,
       "reject_null" = reject_null,
       "alternative" = object@alternative,

@@ -302,6 +302,7 @@ setMethod(
     return(list(
       "effect" = effect,
       "confidence_interval" = ci,
+      "confidence_interval_percentiles" = object@percentiles,
       "p_value" = p_value,
       "reject_null" = reject_null,
       "alternative" = object@alternative
