@@ -270,8 +270,8 @@ testthat::test_that(
     testthat::expect_gte(results_2b, 0.25)
 
     testthat::expect_lte(abs(results_1$`x_3 - x_2`$p_value - results_2c), 0.03)
-    testthat::expect_lte(results_2b, 0.26)
-    testthat::expect_gte(results_2b, 0.25)
+    testthat::expect_lte(results_2c, 0.26)
+    testthat::expect_gte(results_2c, 0.25)
   }
 )
 
