@@ -4,7 +4,7 @@ NULL
 
 #' Bootstrap difference test
 #'
-#' Performs a (two-sample) difference test on variables.
+#' Performs a two-sample difference test on variables.
 #'
 #' @param ... Two or more numeric variables that are to be tested. If `paired =
 #'   FALSE` (default), the number of values for each variable can be different.

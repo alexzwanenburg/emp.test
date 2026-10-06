@@ -49,7 +49,7 @@ instead of from summary descriptors.}
 htest object
 }
 \description{
-Performs a (two-sample) difference test on variables.
+Performs a two-sample difference test on variables.
 }
 \details{
 A difference test assesses the difference between two variables

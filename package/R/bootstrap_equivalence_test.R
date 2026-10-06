@@ -15,7 +15,7 @@ NULL
 #'
 #'   If more than two numeric variables are provided, tests are conducted in
 #'   pairwise combinations. In this case it is recommended to set symmetric
-#'   `tolerance` boundaries or generate this dynamically.
+#'   `tolerance` boundaries or generate these dynamically.
 #' @param tolerance Numeric values setting the lower and / or upper boundary for
 #'   the test. If `alternative = "equivalent`, one or two values are expected.
 #'   If one value is provided, the provided value is used as the upper boundary,
@@ -28,9 +28,9 @@ NULL
 #'   Instead of providing numeric values, a custom function can be provided that
 #'   yields one or two numeric values (depending on `alternative`). The
 #'   **first two** arguments of the function are expected to be single numeric values
-#'   that were computed after applying `summary_function` to the a pair of
-#'   columns of the input data. This allows for dynamically computing tolerance
-#'   values based on summary statistic values.
+#'   that were computed after applying `summary_function` to a pair of
+#'   variables. This allows for dynamically computing tolerance values based on
+#'   summary statistic values.
 #' @param tolerance_function_args A named list of additional arguments supplied
 #'   to `tolerance`, if `tolerance` is a custom function.
 #' @param alternative The alternative hypothesis. One of `"equivalent"` (default),
@@ -41,7 +41,7 @@ NULL
 #' An equivalence test assesses the difference between two variables (samples),
 #' but from a different starting assumption than a difference test. Whereas
 #' difference tests assume that there is no difference between groups, an
-#' equivalence test assumes that there a non-marginal difference exists. That is,
+#' equivalence test assumes that a non-marginal difference exists. That is,
 #' it tests for the absence of a meaningful difference.
 #'
 #' Equivalence tests are often performed using the two one-sided test (TOST)
