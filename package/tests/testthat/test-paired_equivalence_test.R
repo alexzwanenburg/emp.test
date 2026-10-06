@@ -321,3 +321,33 @@ testthat::test_that(
   }
 )
 
+
+# Test without summary statistic.
+testthat::test_that(
+  "Paired equivalence test functions correctly without a summary statistic.",
+  {
+    x_1 <- emp.test:::.rnorm(50L, seed = 19L)
+    x_2 <- x_1 + 0.1 + emp.test:::.rnorm(50L, sd = 0.2, seed = 20L)
+
+    # Standard deviation.
+    results_1 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = 0.10,
+      summary_function = NULL,
+      paired = TRUE
+    )
+    results_2 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = 0.10,
+      paired = TRUE
+    )
+    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.43)
+    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.41)
+
+    # The direct difference should have a higher p-value than the difference of
+    # the means.
+    testthat::expect_gt(results_1$`x_2 - x_1`$p_value, results_2$`x_2 - x_1`$p_value)
+  }
+)
