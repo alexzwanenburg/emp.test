@@ -60,7 +60,7 @@ setClass(
 )
 
 
-# initialize -------------------------------------------------------------------
+## initialize ------------------------------------------------------------------
 setMethod(
   "initialize",
   signature(.Object = "empiricalLocTest"),
@@ -87,8 +87,8 @@ setMethod(
     )
     .Object@location <- location
 
-    # Set n_draw_input_samples, which determines the number of random numbers that
-    # should be drawn for summaries,
+    # Set n_draw_input_samples, which determines the number of random numbers
+    # that should be drawn for summaries,
     .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
 
     return(.Object)
@@ -97,7 +97,7 @@ setMethod(
 
 
 
-# .test ------------------------------------------------------------------------
+## .test -----------------------------------------------------------------------
 setMethod(
   ".test",
   signature(object = "empiricalLocTest"),
@@ -124,7 +124,7 @@ setMethod(
 )
 
 
-# ..test -----------------------------------------------------------------------
+## ..test ----------------------------------------------------------------------
 setMethod(
   "..test",
   signature(object = "empiricalLocTest"),
@@ -149,7 +149,7 @@ setMethod(
 
 
 
-# .compute_test_results --------------------------------------------------------
+## .compute_test_results -------------------------------------------------------
 setMethod(
   ".compute_test_results",
   signature(object = "empiricalLocTest"),
