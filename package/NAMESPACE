@@ -3,6 +3,7 @@
 export(difference_test)
 export(equivalence_test)
 export(location_test)
+export(one_sample_equivalence_test)
 exportClasses(empiricalTest)
 import(methods)
 importClassesFrom(rstream,rstream.runif)
