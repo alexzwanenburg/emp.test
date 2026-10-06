@@ -127,7 +127,7 @@ testthat::test_that(
     testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
 
     # Tolerance using a function with extra arguments.
-    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.2, 0.3)) else return(c(-0.1, 0.1)))
+    tol_fun <- function(x1, x2, flag) (if (flag) return(-0.2) else return(-0.1))
     results_5 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
@@ -195,7 +195,7 @@ testthat::test_that(
     testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_4$`x_2 - x_1`$p_value)
 
     # Tolerance using a function with extra arguments.
-    tol_fun <- function(x1, x2, flag) (if (flag) return(c(-0.3, 0.2)) else return(c(-0.1, 0.1)))
+    tol_fun <- function(x1, x2, flag) (if (flag) return(0.2) else return(0.1))
     results_5 <- emp.test::equivalence_test(
       x_1 = x_1,
       x_2 = x_2,
