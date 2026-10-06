@@ -48,10 +48,10 @@ to \code{tolerance}, if \code{tolerance} is a custom function.}
 \item{alternative}{The alternative hypothesis. One of \code{"equivalent"} (default),
 \code{"not_inferior"} or \code{"not_superior"}.}
 
-\item{significance_level}{Significance level for rejecting the null hypothesis.
-The default value is 0.95, which means that the null hypothesis is rejected
-if the p-value of the test is 0.05 or smaller. Must be a number between
-0.0 and 1.0.}
+\item{significance_level}{Significance level for rejecting the null
+hypothesis. The default value is 0.95, which means that the null hypothesis
+is rejected if the p-value of the test is 0.05 or smaller. Must be a number
+between 0.0 and 1.0.}
 
 \item{paired}{Indicator for paired tests. By default, data is considered to
 be unpaired (\code{paired = FALSE}). If paired \code{paired = TRUE}, all numeric

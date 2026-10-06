@@ -14,19 +14,19 @@ difference_test(
 )
 }
 \arguments{
-\item{...}{Two or more numeric variables that are to be tested. If \code{paired = FALSE} (default), the number of values in each variable can be different.
+\item{...}{Two or more numeric variables that are to be tested. If \code{paired = FALSE} (default), the number of values for each variable can be different.
 If \code{paired = TRUE}, the number of values in each variable must be the same.
 
 If more than two numeric variables are provided, tests are conducted for
 pairwise combinations of the variables.}
 
-\item{alternative}{The alternative hypothesis. One of \code{"two_sided"}, \code{"greater"}
-and \code{"less"}.}
+\item{alternative}{The alternative hypothesis. One of \code{"two_sided"},
+\code{"greater"} and \code{"less"}.}
 
-\item{significance_level}{Significance level for rejecting the null hypothesis.
-The default value is 0.95, which means that the null hypothesis is rejected
-if the p-value of the test is 0.05 or smaller. Must be a number between
-0.0 and 1.0.}
+\item{significance_level}{Significance level for rejecting the null
+hypothesis. The default value is 0.95, which means that the null hypothesis
+is rejected if the p-value of the test is 0.05 or smaller. Must be a number
+between 0.0 and 1.0.}
 
 \item{paired}{Indicator for paired tests. By default, data is considered to
 be unpaired (\code{paired = FALSE}). If paired \code{paired = TRUE}, all numeric
@@ -49,24 +49,22 @@ instead of from summary descriptors.}
 htest object
 }
 \description{
-Performs a difference test on variables.
+Performs a (two-sample) difference test on variables.
 }
 \details{
-A difference test assesses the difference between two variables (samples).
-An example of a difference test is Student's t-test, which assesses the difference
-in the means of two variables. The bootstrap difference test generalises such
-tests by allowing a custom \code{summary_function}, and not having any assumptions
-except for independence.
+A difference test assesses the difference between two variables
+(samples). An example of a difference test is Student's t-test, which
+assesses the difference in the means of two variables. The bootstrap
+difference test generalises such tests by allowing a custom
+\code{summary_function}, and not having any assumptions except for independence.
 
-The difference test has the null hypothesis
-\eqn{H_0: f(x_1) = f(x_2)}{H0: f(x1) = f(x2)}. Here \eqn{f(x_1)}{f(x1)} and
-\eqn{f(x_2)}{f(x2)} are the summary descriptors of input variables \eqn{x_1}{x1}
-and \eqn{x_2}{x2}, respectively.
+The difference test has the null hypothesis \eqn{H_0: f(x_1) = f(x_2)}{H0:
+f(x1) = f(x2)}. Here \eqn{f(x_1)}{f(x1)} and \eqn{f(x_2)}{f(x2)} are the
+summary descriptors of input variables \eqn{x_1}{x1} and \eqn{x_2}{x2},
+respectively.
 
-The alternative hypothesis depends on \code{alternative}. When \code{alternative = "two_sided"},
-the alternative hypothesis is \eqn{H_1: f(x_1) \neq f(x_2)}{H1: f(x1) ≠ f(x2)}.
-For \code{alternative = "greater"} the alternative hypothesis is
-\eqn{H_1: f(x_1) > f(x_2)}{H1: f(x1) > f(x2)}.
-Finally, for \code{alternative = "less"} the alternative hypothesis is
-\eqn{H_1: f(x_1) < f(x_2)}{H1: f(x1) < f(x2)}.
+The alternative hypothesis depends on \code{alternative}. When \code{alternative = "two_sided"}, the alternative hypothesis is \eqn{H_1: f(x_1) \neq f(x_2)}{H1:
+f(x1) ≠ f(x2)}. For \code{alternative = "greater"} the alternative hypothesis is
+\eqn{H_1: f(x_1) > f(x_2)}{H1: f(x1) > f(x2)}. Finally, for \code{alternative = "less"} the alternative hypothesis is \eqn{H_1: f(x_1) < f(x_2)}{H1: f(x1) <
+f(x2)}.
 }
