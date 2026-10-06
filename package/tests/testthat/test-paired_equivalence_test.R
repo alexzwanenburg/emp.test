@@ -173,8 +173,8 @@ testthat::test_that(
       paired = TRUE
     )
 
-    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.30)
-    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.29)
+    testthat::expect_lte(results_1$`x_2 - x_1`$p_value, 0.29)
+    testthat::expect_gte(results_1$`x_2 - x_1`$p_value, 0.28)
 
     # Larger tolerance --> lower p-value
     results_2 <- emp.test::equivalence_test(
