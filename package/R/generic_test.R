@@ -477,3 +477,10 @@ setMethod(
     ..error_reached_unreachable_code(".compute_test_results should be implemented in subclasses of empiricalTest.")
   }
 )
+
+
+
+# .set_percentiles -------------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".set_percentiles", function(object, ...) standardGeneric(".set_percentiles"))

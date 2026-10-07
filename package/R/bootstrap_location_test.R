@@ -29,7 +29,7 @@ NULL
 #'
 #'   The difference test has the null hypothesis \eqn{H_0: f(x) = \lambda}{H0:
 #'   f(x) = λ}. Here \eqn{f(x)}{f(x)} is the summary descriptor of input variable \eqn{x}{x},
-#'   and \eqn{\lambda}{λ} is the location..
+#'   and \eqn{\lambda}{λ} is the location.
 #'
 #'   The alternative hypothesis depends on `alternative`.
 #'   When `alternative = "two_sided"`, the alternative hypothesis is

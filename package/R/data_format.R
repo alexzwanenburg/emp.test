@@ -21,7 +21,7 @@ format_data <- function(data) {
       # Covers pure lists.
       for (ii in seq_along(data_set)) {
         if (is.numeric(data_set[[ii]])) {
-          formatted_data[[data_index]] <- data_set[[column]]
+          formatted_data[[data_index]] <- data_set[[ii]]
           if (!is.null(names(data_set)[ii])) {
             formatted_data_names[data_index] <- names(data_set)[ii]
           } else {
@@ -75,6 +75,105 @@ format_data <- function(data) {
       class = c("emp_test_error", "input_argument_error")
     )
   }
+
+  # Set names.
+  names(formatted_data) <- formatted_data_names
+
+  return(formatted_data)
+}
+
+
+
+format_data_categorical <- function(data) {
+  # This converts any input data to a list of numeric vectors.
+  formatted_data <- list()
+  formatted_data_names <- character()
+  data_index <- 1L
+
+  for (ii in seq_along(data)) {
+    data_set <- data[[ii]]
+    var_name <- names(data)[ii]
+    if (is.data.frame(data_set)) {
+      # Covers data.frame and data.table.
+      for (column in colnames(data_set)) {
+        if (
+          is.character(data_set[[column]]) || is.logical(data_set[[column]]) ||
+          is.integer(data_set[[column]]) || is.factor(data_set[[column]])
+        ) {
+          formatted_data[[data_index]] <- data_set[[column]]
+          formatted_data_names[data_index] <- column
+          data_index <- data_index + 1L
+        }
+      }
+
+    } else if (rlang::is_bare_list(data_set)) {
+      # Covers pure lists.
+      for (ii in seq_along(data_set)) {
+        if (
+          is.character(data_set[[ii]]) || is.logical(data_set[[ii]]) ||
+          is.integer(data_set[[ii]]) || is.factor(data_set[[ii]])
+        ) {
+          formatted_data[[data_index]] <- data_set[[ii]]
+
+          if (!is.null(names(data_set)[ii])) {
+            formatted_data_names[data_index] <- names(data_set)[ii]
+          } else {
+            formatted_data_names[data_index] <- paste0("x_", ii)
+          }
+          data_index <- data_index + 1L
+        }
+      }
+
+    } else if (
+      is.character(data_set) || is.logical(data_set) ||
+      is.integer(data_set) || is.factor(data_set)
+    ) {
+      # Numeric vectors.
+      formatted_data[[data_index]] <- data_set
+      if (!is.null(var_name)) {
+        formatted_data_names[data_index] <- var_name
+      } else {
+        formatted_data_names[data_index] <- paste0("x_", ii)
+      }
+      data_index <- data_index + 1L
+
+    } else {
+      msg <- "While attempting to convert the data, a variable that does not contain numeric data was detected: "
+      if (is.null(var_name)) {
+        msg <- paste0(msg, "positional variable [", ii, "]")
+      } else {
+        msg <- paste0(msg, var_name)
+      }
+
+      rlang::abort(
+        message = msg,
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+  }
+
+  # Basic checks
+  # Check that any data is present.
+  if (length(formatted_data) == 0L) {
+    rlang::abort(
+      message = "No categorical data was found.",
+      class = c("emp_test_error", "input_argument_error")
+    )
+  }
+
+  # Check that none of the data has zero length.
+  if (any(lengths(formatted_data) == 0L)) {
+    variables_empty <- formatted_data_names[lengths(formatted_data)]
+    rlang::abort(
+      message = paste0(
+        "One or more empty variables were detected: ", paste_s(variables_empty)
+      ),
+      class = c("emp_test_error", "input_argument_error")
+    )
+  }
+
+  # Check that all data have the same type.
+  browser()
 
   # Set names.
   names(formatted_data) <- formatted_data_names

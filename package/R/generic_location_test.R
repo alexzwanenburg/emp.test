@@ -106,9 +106,6 @@ setMethod(
 
 # .set_percentiles -------------------------------------------------------------
 
-## generic ---------------------------------------------------------------------
-setGeneric(".set_percentiles", function(object, ...) standardGeneric(".set_percentiles"))
-
 ## empiricalGenericLocTest -----------------------------------------------------
 setMethod(
   ".set_percentiles",
