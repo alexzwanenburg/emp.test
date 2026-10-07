@@ -8,10 +8,21 @@
 
 ## Overview
 
-To be added
+`emp.test` implements empirical statistical tests using bootstrapping:
+
+- location tests, like Student's one-sample t-test.
+- difference tests, like Student's two-sample t-test.
+- equivalence (incl. non-inferiority and non-superiority) tests.
+- goodness-of-fit tests, like Fisher's Chi-Square test.
+
+This package is currently under development. 
 
 ## Installing emp.test
 
-Stable versions of emp.test can be installed from CRAN.
+Future versions of emp.test will be installable from CRAN.
 
     install.packages("emp.test")
+
+The current version can be installed from GitHub:
+
+    remotes::install_github("alexzwanenburg/emp.test/package")
