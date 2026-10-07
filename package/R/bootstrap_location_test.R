@@ -4,12 +4,41 @@ NULL
 
 #' Bootstrap location test
 #'
-#' @param ... description
-#' @param location description
-#' @param alternative description
-#' @param significance_level description
-#' @param summary_function description
-#' @param summary_function_args description
+#' Performs a one-sample location test on variables.
+#'
+#' @param ... One or more numeric variables that are to be tested. If more than
+#'   one numeric variable is provided, tests are conducted separately for each
+#'   variable. In this case it is recommended to set symmetric `tolerance`
+#'   boundaries or generate this dynamically.
+#' @param location Numeric value against which numeric variables are tested.
+#' @param summary_function Function for computing the summary descriptor from an
+#'   input variable. By default: `mean`, which means that mean value of an input
+#'   variable is evaluated. The `summary_function` can be any function that
+#'   yields a single numeric value for each input variable. The **first**
+#'   argument of the `summary_function` is expected to be a single input
+#'   variable.
+#' @param summary_function_args A named list of arguments that is provided to
+#'   `summary_function`.
+#' @inheritParams difference_test
+#'
+#' @details A location test assesses the difference between a variable (sample)
+#'   and a location. An example of a difference test is Student's one-sample
+#'   t-test, which assesses the between the mean of a variable and the location.
+#'   The bootstrap location test generalises such tests by allowing a custom
+#'   `summary_function`, and not having any assumptions except for independence.
+#'
+#'   The difference test has the null hypothesis \eqn{H_0: f(x) = \lambda}{H0:
+#'   f(x) = λ}. Here \eqn{f(x)}{f(x)} is the summary descriptor of input variable \eqn{x}{x},
+#'   and \eqn{\lambda}{λ} is the location..
+#'
+#'   The alternative hypothesis depends on `alternative`.
+#'   When `alternative = "two_sided"`, the alternative hypothesis is
+#'   \eqn{H_1: f(x) \neq λ}{H1: f(x) ≠ λ}.
+#'   For `alternative = "greater"` the alternative hypothesis is
+#'   \eqn{H_1: f(x) > λ}{H1: f(x) > λ}.
+#'   Finally, for `alternative = "less"` the alternative hypothesis is
+#'    \eqn{H_1: f(x) < λ}{H1: f(x) < λ}.
+#'
 #'
 #' @returns htest object
 #' @export

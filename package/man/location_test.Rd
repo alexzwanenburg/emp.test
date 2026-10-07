@@ -14,21 +14,53 @@ location_test(
 )
 }
 \arguments{
-\item{...}{description}
+\item{...}{One or more numeric variables that are to be tested. If more than
+one numeric variable is provided, tests are conducted separately for each
+variable. In this case it is recommended to set symmetric \code{tolerance}
+boundaries or generate this dynamically.}
 
-\item{location}{description}
+\item{location}{Numeric value against which numeric variables are tested.}
 
-\item{alternative}{description}
+\item{alternative}{The alternative hypothesis. One of \code{"two_sided"},
+\code{"greater"} and \code{"less"}.}
 
-\item{significance_level}{description}
+\item{significance_level}{Significance level for rejecting the null
+hypothesis. The default value is 0.95, which means that the null hypothesis
+is rejected if the p-value of the test is 0.05 or smaller. Must be a number
+between 0.0 and 1.0.}
 
-\item{summary_function}{description}
+\item{summary_function}{Function for computing the summary descriptor from an
+input variable. By default: \code{mean}, which means that mean value of an input
+variable is evaluated. The \code{summary_function} can be any function that
+yields a single numeric value for each input variable. The \strong{first}
+argument of the \code{summary_function} is expected to be a single input
+variable.}
 
-\item{summary_function_args}{description}
+\item{summary_function_args}{A named list of arguments that is provided to
+\code{summary_function}.}
 }
 \value{
 htest object
 }
 \description{
-Bootstrap location test
+Performs a one-sample location test on variables.
+}
+\details{
+A location test assesses the difference between a variable (sample)
+and a location. An example of a difference test is Student's one-sample
+t-test, which assesses the between the mean of a variable and the location.
+The bootstrap location test generalises such tests by allowing a custom
+\code{summary_function}, and not having any assumptions except for independence.
+
+The difference test has the null hypothesis \eqn{H_0: f(x) = \lambda}{H0:
+  f(x) = λ}. Here \eqn{f(x)}{f(x)} is the summary descriptor of input variable \eqn{x}{x},
+and \eqn{\lambda}{λ} is the location..
+
+The alternative hypothesis depends on \code{alternative}.
+When \code{alternative = "two_sided"}, the alternative hypothesis is
+\eqn{H_1: f(x) \neq λ}{H1: f(x) ≠ λ}.
+For \code{alternative = "greater"} the alternative hypothesis is
+\eqn{H_1: f(x) > λ}{H1: f(x) > λ}.
+Finally, for \code{alternative = "less"} the alternative hypothesis is
+\eqn{H_1: f(x) < λ}{H1: f(x) < λ}.
 }
