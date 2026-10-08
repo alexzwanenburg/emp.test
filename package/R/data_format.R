@@ -172,8 +172,140 @@ format_data_categorical <- function(data) {
     )
   }
 
-  # Check that all data have the same type.
-  browser()
+  # Check that the class of all columns is the same.
+  all_data_same_class <- FALSE
+  if (is.character(formatted_data[[1L]])) all_data_same_class <- all(sapply(formatted_data, is.character))
+  else if (is.logical(formatted_data[[1L]])) all_data_same_class <- all(sapply(formatted_data, is.logical))
+  else if (is.integer(formatted_data[[1L]])) all_data_same_class <- all(sapply(formatted_data, is.integer))
+  else if (is.factor(formatted_data[[1L]])) all_data_same_class <- all(sapply(formatted_data, is.factor))
+
+  if (!all_data_same_class) {
+    rlang::abort(
+      message = "Input variables are expected to have the same class, but have different classes instead.",
+      class = c("emp_test_error", "input_argument_error")
+    )
+  }
+
+  # If input is integer, input variables should have the same length, and the
+  # minimum values should be 0. Integer values represent the number of counts
+  # for each class.
+  if (is.integer(formatted_data[[1L]])) {
+    if (!all(lengths(formatted_data) == length(formatted_data[[1L]]))) {
+      rlang::abort(
+        message = paste0(
+          "Input variables with integer values are expected to represent the count for each category. ",
+          "Thus all input variables should have the same length. However, lengths were found to differ: ",
+          paste_s(lengths(formatted_data)), " for ", paste_s(formatted_data_names), " respectively."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+
+    for (ii in seq_along(formatted_data)) {
+      if (any(formatted_data[[ii]] < 0L)) {
+        rlang::abort(
+          message = paste0(
+            "Input variables with integer values are expected to represent the count for each category, and cannot be negative. ",
+            formatted_data_names[ii], " contains one or more negative values."
+          ),
+          class = c("emp_test_error", "input_argument_error")
+        )
+      }
+    }
+
+    has_names <- sapply(formatted_data, function(x) (!is.null(names(x))))
+    if (!(all(has_names)) || !(all(!has_names))) {
+      rlang::abort(
+        message = paste0(
+          "Input variables with integer values should either all be named, or all be unnamed. ",
+          "Found: mix of variables with names and without names."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+
+    if (all(has_names)) {
+      if (!all(sapply(formatted_data, function(x, ref) (setequal(names(x), ref)), ref = names(formatted_data[[1L]])))) {
+        rlang::abort(
+          message = paste0(
+            "Input variables with integer values are expected to have the same categories (names). ",
+            "Found:  differ between variables."
+          ),
+          class = c("emp_test_error", "input_argument_error")
+        )
+      }
+
+      if (!all(sapply(formatted_data, function(x, ref) (identical(names(x), ref)), ref = names(formatted_data[[1L]])))) {
+        rlang::abort(
+          message = paste0(
+            "Input variables with integer values are expected to have the same categories (names). ",
+            "Found: categories were ordered differently between variables."
+          ),
+          class = c("emp_test_error", "input_argument_error")
+        )
+      }
+    }
+
+    # Set categories
+    if (all(has_names)) categories <- names(formatted_data[[1L]])
+    else categories <- paste0("c", seq_along(formatted_data[[1L]]))
+
+    # Apply categories as names.
+    if (all(!has_names)) {
+      for (ii in seq_along(formatted_data)) {
+        names(formatted_data[[ii]]) <- categories
+      }
+    }
+  }
+
+  # If input is factor, ensure that the same levels appear in each variable,
+  # and that their ordering is consistent.
+  if (is.factor(formatted_data[[1L]])) {
+    if (!all(sapply(formatted_data, function(x, ref) (setequal(levels(x), ref)), ref = levels(formatted_data[[1L]])))) {
+      rlang::abort(
+        message = paste0(
+          "Categorical input variables are expected to have the same categories (levels). ",
+          "Found: categories differ between variables."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+
+    if (!all(sapply(formatted_data, function(x, ref) (identical(levels(x), ref)), ref = levels(formatted_data[[1L]])))) {
+      rlang::abort(
+        message = paste0(
+          "Categorical input variables are expected to have the same categories (levels). ",
+          "Found: categories were ordered differently between variables."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+
+    # Set categories
+    categories <- levels(formatted_data[[1L]])
+  }
+
+  # Logical input data.
+  if (is.logical(formatted_data[[1L]])) {
+    categories <- c(FALSE, TRUE)
+  }
+
+  # Character type input data.
+  if (is.character(formatted_data[[1L]])) {
+    categories <- unique(unlist(lapply(formatted_data, unique)))
+  }
+
+  # Convert input variables to counts of each class.
+  if (!is.integer(formatted_data[[1L]])) {
+    for (ii in seq_along(formatted_data)) {
+      counts <- integer(length(categories))
+      for (jj in seq_along(categories)) {
+        counts[jj] <- sum(formatted_data[[ii]] == categories[jj])
+      }
+      names(counts) <- categories
+      formatted_data[[ii]] <- counts
+    }
+  }
 
   # Set names.
   names(formatted_data) <- formatted_data_names
