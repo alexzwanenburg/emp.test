@@ -42,5 +42,15 @@ setMethod(
 )
 
 # Bootstrap goodness of fit steps:
+
+# Test-statistic route:
 # Compute test statistic on input data.
+# Draw samples from the expected distribution (either external or ad-hoc).
+# Compute test statistics for each sample.
+# Compare test input and bootstrap test statistics.
+#
+# Bootstrap route:
+# Sort input data.
 # Draw samples from the expected distribution (either external or ad-hoc)
+# Sort samples.
+# Compare each input datapoint with its corresponding expected distribution.
