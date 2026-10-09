@@ -38,6 +38,12 @@ setMethod(
     # Format data.
     .Object@input_data <- format_data_categorical(data = data)
 
+    # Check expected.
+    .Object@expected <- .set_expected_categorical(
+      expected = expected,
+      data = .Object@expected
+    )
+
     return(.Object)
   }
 )
