@@ -1,4 +1,8 @@
-.set_expected_categorical <- function(expected, data) {
+.set_expected_categorical <- function(
+    expected,
+    expected_args = NULL,
+    data
+) {
   # Null -----------------------------------------------------------------------
   # In this case, the null hypothesis-data is generated from the combined
   # counts of the input data.
@@ -77,7 +81,7 @@
     }
 
     # Check that there are no negative entries.
-    if (any(expected < 0L)) {
+    if (any(expected < 0.0)) {
       rlang::abort(
         message = paste0(
           "Numeric values of expected are expected to represent probabilities of the categories. ",
@@ -116,21 +120,102 @@
   }
 
 
-  # logical --------------------------------------------------------------------
-  if (is.logical(expected)) {
+  # logical or character -------------------------------------------------------
+  if (is.logical(expected) || is.character(expected)) {
     categories <- names(data[[1L]])
     if (!all(expected %in% categories)) {
       rlang::abort(
-
+        message = paste0(
+          "Expected and data are expected to have the same categories. Found: ",
+          paste_s(setdiff(unique(expected), categories)), " appear in expected but not in the data."
+        ),
+        class = c("emp_test_error", "input_argument_error")
       )
     }
+    counts <- integer(length(categories))
+    for (jj in seq_along(categories)) {
+      counts[jj] <- sum(expected == categories[jj])
+    }
+    names(counts) <- categories
+    expected <- counts / sum(counts)
+
+    return(expected)
   }
 
-  # character ------------------------------------------------------------------
 
-  # factor ---------------------------------------------------------------------
+  # factor ------------------------------------------------------------------
+  if (is.character(expected)) {
+    categories <- names(data[[1L]])
+    if (!all(levels(expected) %in% categories)) {
+      rlang::abort(
+        message = paste0(
+          "Expected and data are expected to have the same categories. Found: ",
+          paste_s(setdiff(levels(expected), categories)), " appear in expected but not in the data."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+    counts <- integer(length(categories))
+    for (jj in seq_along(categories)) {
+      counts[jj] <- sum(expected == categories[jj])
+    }
+    names(counts) <- categories
+    expected <- counts / sum(counts)
+
+    return(expected)
+  }
+
 
   # function -------------------------------------------------------------------
-  # Expected is a function that can randomly generate values.
+  if (is.function(expected)) {
+    # Attempt to generate values. We generate 1000 values so that we are likely
+    # to capture most of the output.
+    x <- do.call(
+      expected,
+      args = c(
+        list("n" = 1000L),
+        expected_args
+      )
+    )
 
+    # The output should either be integer values indicating specific categories
+    # or the categories themselves.
+    categories <- names(data[[1L]])
+    if (is.integer(x)) {
+      if (any(x <= 0L) || any(x > length(categories))) {
+        rlang::abort(
+          message = paste0(
+            "The output of expected and the provided data are expected to match, ",
+            "with integer values directly associated to each category. Found: ",
+            "output of value 0 or lower, or output exceeding the number of categories ",
+            "(", length(categories), ")."
+          ),
+          class = c("emp_test_error", "input_argument_error")
+        )
+      }
+
+    } else {
+      if (!all(x %in% categories)) {
+        rlang::abort(
+          message = paste0(
+            "The output of expected and the provided data are expected to have the same categories. Found: ",
+            paste_s(setdiff(unique(x), categories)), " appear as output of expected but not in the data."
+          ),
+          class = c("emp_test_error", "input_argument_error")
+        )
+      }
+    }
+
+    return(expected)
+  }
+
+  # If we get here, expected has an unexpected type.
+  rlang::abort(
+    message = paste0(
+      "expected did not have a valid type: ", paste_s(class(expected)), ". Please consult the documentation."
+    ),
+    class = c("emp_test_error", "input_argument_error")
+  )
+
+  return(invisible(NULL))
 }

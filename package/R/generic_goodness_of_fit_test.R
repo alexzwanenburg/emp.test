@@ -41,6 +41,13 @@ setMethod(
   }
 )
 
+
+# .compute_test_statistic ------------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".compute_test_statistic", function(object, ...) standardGeneric(".compute_test_statistic"))
+
+
 # Bootstrap goodness of fit steps:
 
 # Test-statistic route:
