@@ -122,6 +122,17 @@ setMethod(
     observed,
     expected
   ) {
+    if (!is.function(object@test_statistic)) {
+      ..error_reached_unreachable_code("test_statistic should be a function")
+    }
+
+    return(do.call(
+      object@test_statistic,
+      args = C(
+        list(observed, expected),
+        object@test_statistic_args
+      )
+    ))
 
   }
 )
