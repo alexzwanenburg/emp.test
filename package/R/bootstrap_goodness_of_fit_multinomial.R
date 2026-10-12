@@ -94,13 +94,25 @@ setMethod(
 
     } else if (is.null(test_statistic)) {
       # pass --> Use bootstrap tests directly.
-    } else if (test_statistic %in% c("chi_square", "g", "cressie_read")) {
-      browser()
+    } else if (is.character(test_statistic)) {
 
-      if (test_statistic == "chi_square") test_statistic_fun <- test_statistic_chi_square
-      else if (test_statistic == "g") test_statistic_fun
+      # Determine which
+      if (test_statistic == "chi_square") {
+        test_statistic_fun <- test_statistic_chi_square
+      } else if (test_statistic == "g") {
+        test_statistic_fun <- test_statistic_g
+      } else if (test_statistic == "cressie_read") {
+        test_statistic_fun <- test_statistic_cressie_read
+      } else {
+        rlang::abort(
+          message = paste0(
+            "The provided test_statistic is expected to be one of 'chi_square', 'g', 'cressie_read'. ",
+            "Found: ", test_statistic, "."
+          )
+        )
+      }
 
-      # TODO: assign functions instead of names.
+      # Assign as function.
       .Object@test_statistic <- test_statistic_fun
       .Object@test_statistic_args <- test_statistic_args
 
