@@ -129,6 +129,96 @@ setMethod(
 )
 
 
+## get_n_draw_input_samples ----------------------------------------------------
+setMethod(
+  "get_n_draw_input_samples",
+  signature(
+    object = "empiricalCategoricalGOFTest"
+  ),
+  function(object) {
+    if (is.null(object@input_data)) return(0L)
+
+    # The default is that expected is generated for all input data..
+    return(sum(sapply(object@input_data, sum)))
+  }
+)
+
+
+## get_n_draw_summary_samples --------------------------------------------------
+setMethod(
+  "get_n_draw_summary_samples",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(object) {
+    if (is.null(object@summary_data)) return(0L)
+
+    # The default is for all summary data to be resampled.
+    # TODO: determine how to do this effectively. Do we want to compute post-hoc
+    # power for a goodness-of-fit test?
+    browser()
+    return(sum(lengths(object@summary_data)))
+  }
+)
+
+
+## .sample_data ----------------------------------------------------------------
+setMethod(
+  ".sample_data",
+  signature(object = "empiricalPairedDiffTest"),
+  function(object, random_values, ...) {
+    data <- object@summary_data
+    if (is.null(data)) data <- object@input_data
+    if (is.null(random_values)) return(data)
+
+    # Special case for point estimates.
+    if (is.null(random_values)) return(object@input_data)
+
+    # For paired tests the same samples should be randomly selected.
+    n_samples <- length(data[[1L]])
+    sample_indices <- as.integer(ceiling(random_values[1L:n_samples] * n_samples))
+
+    # These edge cases are highlu unlikely but not impossible.
+    sample_indices[sample_indices < 1L] <- 1L
+    sample_indices[sample_indices > n_samples] <- n_samples
+
+    # Select samples.
+    sampled_data <- list()
+    for (variable in names(data)) {
+      sampled_data[[variable]] <- data[[variable]][sample_indices]
+    }
+
+    return(sampled_data)
+  }
+)
+
+
+## ..compute_summary_statistic -------------------------------------------------
+setMethod(
+  "..compute_summary_statistic",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    ...
+  ) {
+    # Produce samples. For categorical goodness-of-fit tests, this
+    # is a vector of input observed data with a matched (random) sample of
+    # expected.
+    samples <- .sample_data(object, ...)
+
+    # Compute test statistics
+    values <- mapply(
+      FUN = .compute_test_statistic,
+      observed = samples$observed,
+      expected = samples$expected,
+      MoreArgs = list("object" = object),
+      SIMPLIFY = FALSE,
+      USE.NAMES = TRUE
+    )
+
+    return(values)
+  }
+)
+
+
 
 ## .compute_test_statistic -----------------------------------------------------
 setMethod(
