@@ -8,15 +8,11 @@ setClass(
   contains = "empiricalTest",
   slots = list(
     percentiles = "numeric",
-    expected = "ANY",
-    test_statistic = "ANY",
-    test_statistic_args = "ANY"
+    expected = "ANY"
   ),
   prototype = list(
     percentiles = NA_real_,
-    expected = NA_real_,
-    test_statistic = NULL,
-    test_statistic_args = NULL
+    expected = NA_real_
   )
 )
 

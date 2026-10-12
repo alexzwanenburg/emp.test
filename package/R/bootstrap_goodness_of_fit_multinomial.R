@@ -10,9 +10,7 @@ setClass(
   contains = "empiricalGenericGOFTest",
   prototype = list(
     percentiles = NA_real_,
-    expected = NA_real_,
-    test_statistic = NULL,
-    test_statistic_args = NULL
+    expected = NA_real_
   )
 )
 
@@ -52,8 +50,8 @@ setMethod(
 
     # Check test_statistic
     if (is.function(test_statistic)) {
-      .Object@test_statistic <- test_statistic
-      .Object@test_statistic_args <- test_statistic_args
+      .Object@summary_function <- test_statistic
+      .Object@summary_function_args <- test_statistic_args
 
       statistic <- tryCatch(
         .compute_test_statistic(
@@ -113,8 +111,8 @@ setMethod(
       }
 
       # Assign as function.
-      .Object@test_statistic <- test_statistic_fun
-      .Object@test_statistic_args <- test_statistic_args
+      .Object@summary_function <- test_statistic_fun
+      .Object@summary_function_args <- test_statistic_args
 
     } else {
       rlang::abort(
@@ -146,10 +144,10 @@ setMethod(
     }
 
     return(do.call(
-      object@test_statistic,
+      object@summary_function,
       args = C(
         list(observed, expected),
-        object@test_statistic_args
+        object@summary_function_args
       )
     ))
   }
