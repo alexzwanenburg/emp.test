@@ -1,6 +1,11 @@
 test_statistic_chi_square <- function(
-  obs,
-  exp
+  observed,
+  expected
 ) {
-  return(sum((obs - exp)^2 / exp))
+  # Exclude elements where obs == exp. This also avoids obs == exp == 0, which
+  # Would otherwise cause issues.
+  equal <- observed == expected
+  if (all(equal)) return(0.0)
+
+  return(sum((observed[!equal] - expected[!equal])^2.0 / expected[!equal]))
 }

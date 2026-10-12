@@ -18,7 +18,7 @@ setClass(
 ## initialize ------------------------------------------------------------------
 setMethod(
   "initialize",
-  signature(.Object = "empiricalGenericGOFTest"),
+  signature(.Object = "empiricalMultinomialGOFTest"),
   function(
     .Object,
     data,
@@ -91,10 +91,14 @@ setMethod(
 
     } else if (is.null(test_statistic)) {
       # pass --> Use bootstrap tests directly.
-    } else if (test_statistic %in% c("chi-square", "g", "cressie_read")) {
+    } else if (test_statistic %in% c("chi_square", "g", "cressie_read")) {
       browser()
+
+      if (test_statistic == "chi_square") test_statistic_fun <- test_statistic_chi_square
+      else if (test_statistic == "g") test_statistic_fun
+
       # TODO: assign functions instead of names.
-      .Object@test_statistic <- test_statistic
+      .Object@test_statistic <- test_statistic_fun
       .Object@test_statistic_args <- test_statistic_args
 
     } else {
