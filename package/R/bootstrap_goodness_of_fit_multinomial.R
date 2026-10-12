@@ -7,11 +7,7 @@ NULL
 # empiricalCategoricalGOFTest object -------------------------------------------
 setClass(
   "empiricalCategoricalGOFTest",
-  contains = "empiricalGenericGOFTest",
-  prototype = list(
-    percentiles = NA_real_,
-    expected = NA_real_
-  )
+  contains = "empiricalGenericGOFTest"
 )
 
 
@@ -47,6 +43,7 @@ setMethod(
       data = .Object@input_data,
       expected_args = expected_args
     )
+    .Object@expected_args <- expected_args
 
     # Check test_statistic
     if (is.function(test_statistic)) {
@@ -124,6 +121,8 @@ setMethod(
       )
     }
 
+    # TODO: set name.
+
     return(.Object)
   }
 )
@@ -163,27 +162,48 @@ setMethod(
 ## .sample_data ----------------------------------------------------------------
 setMethod(
   ".sample_data",
-  signature(object = "empiricalPairedDiffTest"),
+  signature(object = "empiricalCategoricalGOFTest"),
   function(object, random_values, ...) {
-    data <- object@summary_data
-    if (is.null(data)) data <- object@input_data
-    if (is.null(random_values)) return(data)
+    # Produce samples. For categorical goodness-of-fit tests, this
+    # is a vector of input observed data with a matched (random) sample of
+    # expected.
+    data <- object@input_data
+    if (is.null(random_values)) {
+      ..error_reached_unreachable_code("random_values cannot be NULL as expected is always randomised.")
+    }
 
-    # Special case for point estimates.
-    if (is.null(random_values)) return(object@input_data)
 
-    # For paired tests the same samples should be randomly selected.
-    n_samples <- length(data[[1L]])
-    sample_indices <- as.integer(ceiling(random_values[1L:n_samples] * n_samples))
 
-    # These edge cases are highlu unlikely but not impossible.
-    sample_indices[sample_indices < 1L] <- 1L
-    sample_indices[sample_indices > n_samples] <- n_samples
-
-    # Select samples.
+    # The default is for all samples to be resampled.
     sampled_data <- list()
+    index_start <- 1L
     for (variable in names(data)) {
+      n_samples <- sum(data[[variable]])
+
+      if (is.function(object@expected)) {
+        expected <- do.call(
+          object@expected,
+          args = c(
+            list(n_samples),
+            object@expected_args
+          )
+        )
+
+
+      }
+
+      index_end <- index_start + n_samples  - 1L
+      sample_indices <- as.integer(ceiling(random_values[index_start:index_end] * n_samples))
+
+      # These edge cases are highly unlikely but not impossible.
+      sample_indices[sample_indices < 1L] <- 1L
+      sample_indices[sample_indices > n_samples] <- n_samples
+
+      # Select samples.
       sampled_data[[variable]] <- data[[variable]][sample_indices]
+
+      # Increment random value index counter.
+      index_start <- index_end + 1L
     }
 
     return(sampled_data)
