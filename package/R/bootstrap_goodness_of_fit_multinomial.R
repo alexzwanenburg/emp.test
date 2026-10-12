@@ -2,9 +2,11 @@
 #' @include generic_goodness_of_fit_test.R
 NULL
 
-# empiricalMultinomialGOFTest object -----------------------------------------------
+
+
+# empiricalCategoricalGOFTest object -------------------------------------------
 setClass(
-  "empiricalMultinomialGOFTest",
+  "empiricalCategoricalGOFTest",
   contains = "empiricalGenericGOFTest",
   prototype = list(
     percentiles = NA_real_,
@@ -15,10 +17,11 @@ setClass(
 )
 
 
+
 ## initialize ------------------------------------------------------------------
 setMethod(
   "initialize",
-  signature(.Object = "empiricalMultinomialGOFTest"),
+  signature(.Object = "empiricalCategoricalGOFTest"),
   function(
     .Object,
     data,
@@ -120,7 +123,7 @@ setMethod(
 ## .compute_test_statistic -----------------------------------------------------
 setMethod(
   ".compute_test_statistic",
-  signature(.Object = "empiricalGenericGOFTest"),
+  signature(object = "empiricalCategoricalGOFTest"),
   function(
     object,
     observed,
@@ -137,6 +140,5 @@ setMethod(
         object@test_statistic_args
       )
     ))
-
   }
 )
