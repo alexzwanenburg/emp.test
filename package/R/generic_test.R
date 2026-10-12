@@ -7,6 +7,8 @@
 #' @slot name description
 #' @slot input_data description
 #' @slot summary_data description,
+#' @slot summary_function description
+#' @slot summary_function_args description
 #' @slot significance_level description
 #' @slot n_draw_input_samples description
 #' @slot n_bootstraps description
@@ -23,6 +25,10 @@ setClass(
     input_data = "ANY",
     # Intermediate output data.
     summary_data = "ANY",
+    # Function that generates a summary or test statistic
+    summary_function = "ANY",
+    # Additional arguments for the summary_function
+    summary_function_args = "ANY",
     # Significance level of the test.
     significance_level = "numeric",
     # Number of samples that need to be drawn from input data.
@@ -38,6 +44,8 @@ setClass(
     name = NA_character_,
     input_data = NULL,
     summary_data = NULL,
+    summary_function = NULL,
+    summary_function_args = NULL,
     significance_level = 0.95,
     n_draw_input_samples = NA_integer_,
     n_draw_summary_samples = NA_integer_,
