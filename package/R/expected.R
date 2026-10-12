@@ -180,31 +180,7 @@
 
     # The output should either be integer values indicating specific categories
     # or the categories themselves.
-    categories <- names(data[[1L]])
-    if (is.integer(x)) {
-      if (any(x <= 0L) || any(x > length(categories))) {
-        rlang::abort(
-          message = paste0(
-            "The output of expected and the provided data are expected to match, ",
-            "with integer values directly associated to each category. Found: ",
-            "output of value 0 or lower, or output exceeding the number of categories ",
-            "(", length(categories), ")."
-          ),
-          class = c("emp_test_error", "input_argument_error")
-        )
-      }
-
-    } else {
-      if (!all(x %in% categories)) {
-        rlang::abort(
-          message = paste0(
-            "The output of expected and the provided data are expected to have the same categories. Found: ",
-            paste_s(setdiff(unique(x), categories)), " appear as output of expected but not in the data."
-          ),
-          class = c("emp_test_error", "input_argument_error")
-        )
-      }
-    }
+    .check_expected_function_output(x = x, categories = names(data[[1L]]))
 
     return(expected)
   }
@@ -218,4 +194,64 @@
   )
 
   return(invisible(NULL))
+}
+
+
+
+.check_expected_function_output <- function(
+    x,
+    categories
+) {
+  if (is.integer(x)) {
+    if (any(x <= 0L) || any(x > length(categories))) {
+      rlang::abort(
+        message = paste0(
+          "The output of expected and the provided data are expected to match, ",
+          "with integer values directly associated to each category. Found: ",
+          "output of value 0 or lower, or output exceeding the number of categories ",
+          "(", length(categories), ")."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+
+  } else {
+    if (!all(x %in% categories)) {
+      rlang::abort(
+        message = paste0(
+          "The output of expected and the provided data are expected to have the same categories. Found: ",
+          paste_s(setdiff(unique(x), categories)), " appear as output of expected but not in the data."
+        ),
+        class = c("emp_test_error", "input_argument_error")
+      )
+    }
+  }
+
+  return(invisible(TRUE))
+}
+
+
+
+.convert_expected_to_counts <- function(
+    x,
+    categories
+) {
+  # Convert output from an "expected" function or random sampling to
+  # probabilities.
+
+  counts <- integer(length(categories))
+  if (is.integer(x)) {
+    for (jj in seq_along(categories)) {
+      counts[jj] <- sum(x == jj)
+    }
+
+  } else {
+    for (jj in seq_along(categories)) {
+      counts[jj] <- sum(x == categories[jj])
+    }
+  }
+
+  names(counts) <- categories
+
+  return(counts)
 }
