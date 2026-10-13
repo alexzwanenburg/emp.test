@@ -168,12 +168,13 @@
 
   # function -------------------------------------------------------------------
   if (is.function(expected)) {
-    # Attempt to generate values. We generate 1000 values so that we are likely
-    # to capture most of the output.
+    # Attempt to generate values. We generate 100000 values so that we are likely
+    # to capture most of the output. We actually don't run the function during
+    # operation.
     x <- do.call(
       expected,
       args = c(
-        list("n" = 1000L),
+        list("n" = 100000L),
         expected_args
       )
     )
@@ -181,6 +182,11 @@
     # The output should either be integer values indicating specific categories
     # or the categories themselves.
     .check_expected_function_output(x = x, categories = names(data[[1L]]))
+    counts <- .convert_vector_to_counts(
+      x = x,
+      categories = names(data[[1L]])
+    )
+    expected <- counts / sum(counts)
 
     return(expected)
   }
@@ -232,7 +238,7 @@
 
 
 
-.convert_expected_to_counts <- function(
+.convert_vector_to_counts <- function(
     x,
     categories
 ) {
