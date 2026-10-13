@@ -147,13 +147,12 @@ setMethod(
   "get_n_draw_summary_samples",
   signature(object = "empiricalCategoricalGOFTest"),
   function(object) {
-    if (is.null(object@summary_data)) return(0L)
+    if (is.null(object@input_data)) return(0L)
 
-    # The default is for all summary data to be resampled.
-    # TODO: determine how to do this effectively. Do we want to compute post-hoc
-    # power for a goodness-of-fit test?
-    browser()
-    return(sum(lengths(object@summary_data)))
+    # Unlike estimation, categorical goodness-of-fit tests resample observed
+    # data instead of the summary data. Summary data (containing the data under
+    # the Null hypothesis) remains fixed.
+    return(sum(sapply(object@input_data, sum)))
   }
 )
 
@@ -270,6 +269,68 @@ setMethod(
 
 
 
+## .bootstrap_test -------------------------------------------------------------
+setMethod(
+  ".bootstrap_test",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    bootstraps
+  ) {
+    # UPDATE
+    browser()
+
+    # Draw random values, and then split values for further dispatching.
+    r <- .start_random_number_stream(seed = bootstraps[1L] + 1L)
+    n_draw <- length(bootstraps) * object@n_draw_summary_samples
+    random_values <- rstream::rstream.sample(r, n_draw)
+
+    # Create chunks of random values. Note that this method is faster than
+    # structure(split(..., cut(...))).
+    random_value_chunks <- list()
+    index_start <- 1L
+    for (ii in seq_along(bootstraps)) {
+      random_value_chunks[[ii]] <- random_values[index_start:(index_start + object@n_draw_summary_samples - 1L)]
+      index_start <- index_start + object@n_draw_summary_samples
+    }
+
+    # Dispatch to per-bootstrap routines.
+    results <- mapply(
+      FUN = ..bootstrap_test,
+      random_values = random_value_chunks,
+      MoreArgs = list("object" = object),
+      SIMPLIFY = FALSE,
+      USE.NAMES = FALSE
+    )
+
+    return(results)
+  }
+)
+
+
+## ..bootstrap_test ------------------------------------------------------------
+setMethod(
+  "..bootstrap_test",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    ...
+  ) {
+    # UPDATE
+    browser()
+    # Produce samples.
+    samples <- .sample_data(object, ...)
+
+    return(.test(
+      object = object,
+      data = samples,
+      hypothesis_test_only = FALSE
+    ))
+  }
+)
+
+
+
 ## .test -----------------------------------------------------------------------
 setMethod(
   ".test",
@@ -285,8 +346,17 @@ setMethod(
 
     # Iterate over individual of data.
     for (group in names(data)) {
+
+      # Compute
+      obs_statistic <- .compute_test_statistic(
+        object = object,
+        observed = object@input_data[[group]],
+        expected = object@expected * sum(object@input_data[[group]])
+      )
+
       results <- ..test(
         object = object,
+        x_0 = obs_statistic,
         x_1 = data[[group]],
         hypothesis_test_only = hypothesis_test_only
       )
@@ -304,6 +374,7 @@ setMethod(
   signature(object = "empiricalCategoricalGOFTest"),
   function(
     object,
+    x_0,
     x_1,
     hypothesis_test_only = FALSE,
     ...
@@ -311,11 +382,6 @@ setMethod(
 
     if (is.function(object@summary_function)) {
       # Case when a test-statistic is computed.
-      obs_statistic <- .compute_test_statistic(
-        object = object,
-        observed = object@observed,
-        expected = object@expected * sum(object@observed)
-      )
 
     } else {
       # Case when data are evaluated directly.
