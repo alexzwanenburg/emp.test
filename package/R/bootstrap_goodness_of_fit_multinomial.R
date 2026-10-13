@@ -312,3 +312,69 @@ setMethod(
     ))
   }
 )
+
+
+
+## .test -----------------------------------------------------------------------
+setMethod(
+  ".test",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    data,
+    hypothesis_test_only = FALSE,
+    ...
+  ) {
+    browser()
+    test_output <- list()
+
+    # Iterate over individual of data.
+    for (group in names(data)) {
+      results <- ..test(
+        object = object,
+        x_1 = data[[group]],
+        hypothesis_test_only = hypothesis_test_only
+      )
+      test_output[[group]] <- results
+    }
+
+    return(test_output)
+  }
+)
+
+
+## ..test ----------------------------------------------------------------------
+setMethod(
+  "..test",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    x_1,
+    hypothesis_test_only = FALSE,
+    ...
+  ) {
+
+    if (is.function(object@summary_function)) {
+      # Case when a test-statistic is computed.
+
+
+
+    } else {
+      # Case when data are evaluated directly.
+
+    }
+
+
+
+    # Compute difference between groups. Pre-sort so that both quantile
+    # and p-value computation can work with sorted data.
+    x <- sort(x_1)
+
+    return(..test_difference(
+      object = object,
+      x = x,
+      hypothesis_test_only = hypothesis_test_only,
+      location = object@location
+    ))
+  }
+)
