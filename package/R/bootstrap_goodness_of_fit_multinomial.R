@@ -136,10 +136,8 @@ setMethod(
   function(object) {
     if (is.null(object@input_data)) return(0L)
 
-    # The default is that expected is generated for all input data. Because we may need
-    # additional values to ensure the number of values in observed and expected match,
-    # an additional number is drawn to compensate for the number of categories.
-    return(sum(sapply(object@input_data, sum)) + length(object@input_data[[1L]]))
+    # The default is that observed and expected is generated for all input data.
+    return(sum(sapply(object@input_data, sum)))
   }
 )
 
@@ -203,53 +201,10 @@ setMethod(
       )
 
       # Expected is based on the expected attribute, which contains
-      # probabilities. These probabilities need to be converted to counts.
-      expected <- n_samples * object@expected
-
-      # The sum of expected_counts is equal or lower than the number samples in
-      # observed.
-      expected_counts <- floor(expected)
-      required_samples <- sum(expected_counts) - n_samples
-
-      # Randomly add samples to ensure that the number of samples for expected
-      # matches that of observed. The chance of being selected is proportional
-      # to the difference of expected and realised probabilities.
-      if (required_samples > 0L) {
-        required_sample_probs <- object@expected - expected_counts / n_samples
-        required_sample_probs <- required_sample_probs / sum(required_sample_probs)
-        required_sample_probs <- c(0.0, cumsum(required_sample_probs))
-
-        # We don't sample until index_end because of edge cases, and use the
-        # fact that we create more random values than strictly necessary, to try
-        # and use random values that were not used for determining observed.
-        random_sample_probs <- tail(random_values[index_start:(index_end + length(observed))], n = required_samples)
-
-        # This creates pairs of adjacent probabilities from
-        # required_sample_probs. embed creates a matrix where values in each row
-        # are not ordered from lowest to highest (but, counter-intuitively, from
-        # high to low). rev(required_sample_probs) fixes this, but after
-        # iterating over the rows, we need to again revert the resulting values.
-        #
-        # The inner function sums the number of instances where
-        # random_sample_probs lies within the probability range specified by
-        # required_sample_probs.
-        required_samples_added <- rev(apply(
-          X = embed(rev(required_sample_probs), dimension = 2L),
-          MARGIN = 1L,
-          FUN = function(x, probs) {
-            sum(probs >= x[1L] & probs < x[2L])
-          },
-          probs = random_sample_probs
-        ))
-
-        # Update expected_counts
-        expected_counts <- expected_counts + required_samples_added
-      }
-
-      # Select samples.
+      # probabilities.
       sampled_data[[variable]] <- list(
         "observed" = observed,
-        "expected" = expected_counts
+        "expected" = object@expected * n_samples
       )
 
       # Increment random value index counter.
@@ -356,8 +311,11 @@ setMethod(
 
     if (is.function(object@summary_function)) {
       # Case when a test-statistic is computed.
-
-
+      obs_statistic <- .compute_test_statistic(
+        object = object,
+        observed = object@observed,
+        expected = object@expected * sum(object@observed)
+      )
 
     } else {
       # Case when data are evaluated directly.
