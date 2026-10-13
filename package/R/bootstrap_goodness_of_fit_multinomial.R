@@ -43,7 +43,6 @@ setMethod(
       data = .Object@input_data,
       expected_args = expected_args
     )
-    .Object@expected_args <- expected_args
 
     # Check test_statistic
     if (is.function(test_statistic)) {
