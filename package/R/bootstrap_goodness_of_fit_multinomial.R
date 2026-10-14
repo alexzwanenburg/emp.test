@@ -2,6 +2,59 @@
 #' @include generic_goodness_of_fit_test.R
 NULL
 
+#' Bootstrap categorical goodness-of-fit test
+#'
+#' Performs a goodness-of-fit test on categorical variables.
+#'
+#' @param ... One or more counts of categorical variables that are to be tested.
+#'   If more than one categorical variable is provided, tests are conducted
+#'   separately for each variable. Note however, that what is being tested
+#'   depends on `expected`.
+#' @param expected descriptions
+#' @param expected_args A named list of additional arguments supplied to
+#'   `expected`, if `expected` is a custom function. The **first** argument of
+#'   `expected` is expected to indicate the number of samples to be drawn.
+#' @param test_statistic description
+#' @param test_statistic_args A named list of arguments that is provided to
+#'   `test_statistic`.
+#' @inheritParams difference_test
+#'
+#' @details A goodness-of-fit test assesses how closely observed data matches
+#'   expected data or distributions.
+#'
+#'   The bootstrap categorical goodness-of-fit tests is the empirical equivalent
+#'   of statistical tests such as the chi-square or g-test.
+#'
+#' @returns htest object
+#' @export
+categorical_goodness_of_fit_test <- function(
+    ...,
+    expected = NULL,
+    expected_args = NULL,
+    significance_level = 0.95,
+    test_statistic = "cressie_read",
+    test_statistic_args = NULL
+) {
+  # Create test object.
+  object <- methods::new(
+    "empiricalCategoricalGOFTest",
+    data = list(...),
+    expected = expected,
+    expected_args = expected_args,
+    significance_level = significance_level,
+    test_statistic = test_statistic,
+    test_statistic_args = test_statistic_args
+  )
+
+  # Set the number of bootstraps.
+  object@n_bootstraps <- 1000L
+
+  # Perform the test.
+  results <- run_test(object)
+
+  # Return test information.
+  return(results@htest)
+}
 
 
 # empiricalCategoricalGOFTest object -------------------------------------------
@@ -37,7 +90,10 @@ setMethod(
     # Format data.
     .Object@input_data <- format_data_categorical(data = data)
 
-    # Check expected.
+    # Determine the number of samples that need to be drawn.
+    .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
+
+    # Check and set expected.
     .Object@expected <- .set_expected_categorical(
       expected = expected,
       data = .Object@input_data,
@@ -120,7 +176,18 @@ setMethod(
       )
     }
 
-    # TODO: set name.
+    # Set name
+    if (is.character(test_statistic)) {
+      test_statistic <- gsub("_", "-", test_statistic)
+      .Object@name <- paste0(
+        "bootstrap categorical goodness-of-fit hypothesis (", test_statistic, ") test"
+      )
+    } else if (is.null(test_statistic)) {
+      .Object@name <- "bootstrap categorical goodness-of-fit test"
+
+    } else {
+      .Object@name <- "bootstrap categorical goodness-of-fit hypothesis test"
+    }
 
     return(.Object)
   }
@@ -169,7 +236,7 @@ setMethod(
     if (is.null(random_values)) {
       ..error_reached_unreachable_code("random_values cannot be NULL as expected is always randomised.")
     }
-    browser()
+
     # Create vectors of expected.
     n_samples <- sum(sapply(object@input_data, sum))
     if (!is.numeric(object@expected)) {
@@ -183,7 +250,7 @@ setMethod(
     probability <- cumsum(object@expected)
     probability <- probability[1L:(length(probability) - 1L)]
     for (p in probability) {
-      observed <- observed + random_values > p
+      observed <- observed + as.integer(random_values > p)
     }
 
     # Create observed and expected data based on samples.
@@ -194,7 +261,7 @@ setMethod(
       index_end <- index_start + n_samples  - 1L
 
       # Observed is based directly on random_values.
-      observed <- .convert_vector_to_counts(
+      observed_count <- .convert_vector_to_counts(
         observed[index_start:index_end],
         categories = names(data[[variable]])
       )
@@ -202,7 +269,7 @@ setMethod(
       # Expected is based on the expected attribute, which contains
       # probabilities.
       sampled_data[[variable]] <- list(
-        "observed" = observed,
+        "observed" = observed_count,
         "expected" = object@expected * n_samples
       )
 

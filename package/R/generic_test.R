@@ -211,6 +211,7 @@ setMethod(
           USE.NAMES = FALSE
         )
       }
+      browser()
       # Combine summary statistic values into lists.
       results <- unlist(results, recursive = FALSE)
       results <- split(unlist(results), names(object@input_data))

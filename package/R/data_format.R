@@ -214,7 +214,7 @@ format_data_categorical <- function(data) {
     }
 
     has_names <- sapply(formatted_data, function(x) (!is.null(names(x))))
-    if (!(all(has_names)) || !(all(!has_names))) {
+    if (!(all(has_names)) && !(all(!has_names))) {
       rlang::abort(
         message = paste0(
           "Input variables with integer values should either all be named, or all be unnamed. ",

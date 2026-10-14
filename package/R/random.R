@@ -11,6 +11,21 @@
 }
 
 
+.runif <- function(
+    n,
+    min = 0.0,
+    max = 1.0,
+    seed = NULL
+) {
+  # Start rstream.
+  rstream <- .start_random_number_stream(seed = seed)
+  p <- rstream::rstream.sample(rstream, n)  # [0, 1]
+  x <- p * (max - min) + min  # [min, max]
+
+  return(x)
+}
+
+
 
 .ragn <- function(
     n,
@@ -37,12 +52,9 @@
   # Scale cannot be zero or negative.
   if (scale <= 0.0) stop("scale must be strictly positive.")
 
-  # Start rstream.
-  rstream <- .start_random_number_stream(seed = seed)
-
   # Draw n values from an uniform distribution. Avoid extreme tails for
   # numerical reasons.
-  p <- rstream::rstream.sample(rstream, n)
+  p <- .runif(n = n)
   p[p < sqrt(.Machine$double.eps)] <- sqrt(.Machine$double.eps)
   p[p > 1.0 - sqrt(.Machine$double.eps)] <- 1.0 - sqrt(.Machine$double.eps)
 
@@ -98,4 +110,42 @@
     beta = 2.0,
     seed = seed
   ))
+}
+
+
+
+.rcat <- function(
+    n,
+    n_categories = 3L,
+    p_categories = NULL,
+    seed = NULL
+) {
+  if (is.null(p_categories)) {
+    p_categories <- numeric(n_categories) + 1.0 / n_categories
+  }
+
+  if (!all.equal(sum(p_categories), 1.0)) {
+    rlang::abort(
+      message = paste0("p_categories should sum to 1.0. Found: ", sum(p_categories))
+    )
+  }
+
+  if (length(p_categories) != n_categories) {
+    rlang::abort(
+      message = paste0(
+        "n_categories (", n_categories, ") does not match the number of ",
+        "probabilities (", length(p_categories), ")."
+      )
+    )
+  }
+
+  # Draw random numbers.
+  p <- .runif(n = n, seed = seed)
+  p_categories <- cumsum(p_categories)
+  x <- integer(n) + 1L
+  for (p_cat in p_categories) {
+    x[p > p_cat] <- x[p > p_cat] + 1L
+  }
+
+  return(x)
 }

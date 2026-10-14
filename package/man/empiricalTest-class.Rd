@@ -16,6 +16,10 @@ Add description here.
 
 \item{\code{summary_data}}{description,}
 
+\item{\code{summary_function}}{description}
+
+\item{\code{summary_function_args}}{description}
+
 \item{\code{significance_level}}{description}
 
 \item{\code{n_draw_input_samples}}{description}
