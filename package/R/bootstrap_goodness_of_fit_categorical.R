@@ -326,7 +326,7 @@ setMethod(
     if (!is.function(object@summary_function)) {
       ..error_reached_unreachable_code("test_statistic should be a function")
     }
-    browser()
+
     return(do.call(
       object@summary_function,
       args = c(
@@ -339,45 +339,6 @@ setMethod(
 
 
 
-## .bootstrap_test -------------------------------------------------------------
-setMethod(
-  ".bootstrap_test",
-  signature(object = "empiricalCategoricalGOFTest"),
-  function(
-    object,
-    bootstraps
-  ) {
-    # UPDATE
-    browser()
-
-    # Draw random values, and then split values for further dispatching.
-    r <- .start_random_number_stream(seed = bootstraps[1L] + 1L)
-    n_draw <- length(bootstraps) * object@n_draw_summary_samples
-    random_values <- rstream::rstream.sample(r, n_draw)
-
-    # Create chunks of random values. Note that this method is faster than
-    # structure(split(..., cut(...))).
-    random_value_chunks <- list()
-    index_start <- 1L
-    for (ii in seq_along(bootstraps)) {
-      random_value_chunks[[ii]] <- random_values[index_start:(index_start + object@n_draw_summary_samples - 1L)]
-      index_start <- index_start + object@n_draw_summary_samples
-    }
-
-    # Dispatch to per-bootstrap routines.
-    results <- mapply(
-      FUN = ..bootstrap_test,
-      random_values = random_value_chunks,
-      MoreArgs = list("object" = object),
-      SIMPLIFY = FALSE,
-      USE.NAMES = FALSE
-    )
-
-    return(results)
-  }
-)
-
-
 ## ..bootstrap_test ------------------------------------------------------------
 setMethod(
   "..bootstrap_test",
@@ -388,6 +349,10 @@ setMethod(
   ) {
     # UPDATE
     browser()
+
+    # Unlike for estimation tests (difference, equivalence, location), we need
+    # sample the input data.
+
     # Produce samples.
     samples <- .sample_data(object, ...)
 
