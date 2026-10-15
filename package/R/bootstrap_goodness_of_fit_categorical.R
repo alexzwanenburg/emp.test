@@ -376,28 +376,33 @@ setMethod(
     hypothesis_test_only = FALSE,
     ...
   ) {
-    browser()
     test_output <- list()
 
     if (is.null(data)) {
-      # Unlike
-      browser()
+      # Collect data for point-estimates.
+      data <- list()
+      for (group in names(object@input_data)) {
+        data[[group]] <- list(
+          "observed" = object@input_data[[group]],
+          "expected" = object@expected * sum(object@input_data[[group]]),
+          "null" = object@summary_data[[group]]
+        )
+      }
     }
 
     # Iterate over individual of data.
     for (group in names(data)) {
-
-      # Compute
+      # Compute test statistic for the input (or bootstrapped input) data.
       obs_statistic <- .compute_test_statistic(
         object = object,
-        observed = object@input_data[[group]],
-        expected = object@expected * sum(object@input_data[[group]])
+        observed = data[[group]]$observed,
+        expected = data[[group]]$expected
       )
 
       results <- ..test(
         object = object,
         x_0 = obs_statistic,
-        x_1 = data[[group]],
+        x_1 = data[[group]]$null,
         hypothesis_test_only = hypothesis_test_only
       )
       test_output[[group]] <- results
@@ -419,7 +424,7 @@ setMethod(
     hypothesis_test_only = FALSE,
     ...
   ) {
-
+    browser()
     if (is.function(object@summary_function)) {
       # Case when a test-statistic is computed.
 
