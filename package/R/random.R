@@ -54,7 +54,7 @@
 
   # Draw n values from an uniform distribution. Avoid extreme tails for
   # numerical reasons.
-  p <- .runif(n = n)
+  p <- .runif(n = n, seed = seed)
   p[p < sqrt(.Machine$double.eps)] <- sqrt(.Machine$double.eps)
   p[p > 1.0 - sqrt(.Machine$double.eps)] <- 1.0 - sqrt(.Machine$double.eps)
 
