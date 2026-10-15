@@ -132,11 +132,13 @@ setMethod(
   signature(object = "empiricalLocTest"),
   function(
     object,
-    data,
+    data = NULL,
     hypothesis_test_only = FALSE,
     ...
   ) {
     test_output <- list()
+
+    if (is.null(data)) data <- object@summary_data
 
     # Iterate over combinations of groups.
     for (group in names(data)) {
@@ -173,29 +175,5 @@ setMethod(
       hypothesis_test_only = hypothesis_test_only,
       location = object@location
     ))
-  }
-)
-
-
-
-## .compute_test_results -------------------------------------------------------
-setMethod(
-  ".compute_test_results",
-  signature(object = "empiricalLocTest"),
-  function(
-    object,
-    x,
-    ...
-  ) {
-    # Obtain results.
-    results <- .test(object = object, data = object@summary_data)
-
-    # Compute statistical power based on bootstrap tests.
-    for (group in names(x)) {
-      statistical_power <- sum(x[[group]]$reject_null) / length(x[[group]]$reject_null)
-      results[[group]]$power <- statistical_power
-    }
-
-    return(results)
   }
 )

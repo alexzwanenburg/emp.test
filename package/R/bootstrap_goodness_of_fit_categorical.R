@@ -372,12 +372,17 @@ setMethod(
   signature(object = "empiricalCategoricalGOFTest"),
   function(
     object,
-    data,
+    data = NULL,
     hypothesis_test_only = FALSE,
     ...
   ) {
     browser()
     test_output <- list()
+
+    if (is.null(data)) {
+      # Unlike
+      browser()
+    }
 
     # Iterate over individual of data.
     for (group in names(data)) {

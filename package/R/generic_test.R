@@ -229,8 +229,11 @@ setMethod(
       cl = cl
     )
 
+    # Point test
+    point_results <- .test(object = object)
+
     if (length(cl) <= 1L) {
-      results <- mapply(
+      power_results <- mapply(
         FUN = .bootstrap_test,
         bootstraps = bootstraps,
         MoreArgs = list(object = object),
@@ -238,7 +241,7 @@ setMethod(
         USE.NAMES = FALSE
       )
     } else {
-      results <- parallel::clusterMap(
+      power_results <- parallel::clusterMap(
         cl = cl,
         fun = .bootstrap_test,
         bootstraps = bootstraps,
@@ -247,10 +250,14 @@ setMethod(
         USE.NAMES = FALSE
       )
     }
-    results <- aggregate_results(x = results)
+    power_results <- aggregate_results(x = power_results)
 
     # Get test results and generate htest object.
-    htest <- .compute_test_results(object = object, x = results)
+    htest <- .compute_test_results(
+      object = object,
+      point_results = point_results,
+      power_results = power_results
+    )
     object@htest <- htest
 
     return(object)
@@ -481,9 +488,19 @@ setGeneric(".compute_test_results", function(object, ...) standardGeneric(".comp
 setMethod(
   ".compute_test_results",
   signature(object = "empiricalTest"),
-  function(object, ...) {
-    # This needs to be implemented on the level of individual tests.
-    ..error_reached_unreachable_code(".compute_test_results should be implemented in subclasses of empiricalTest.")
+  function(
+    object,
+    point_results,
+    power_results,
+    ...
+  ) {
+    # Compute statistical power based on bootstrap tests.
+    for (group in names(power_results)) {
+      statistical_power <- sum(power_results[[group]]$reject_null) / length(power_results[[group]]$reject_null)
+      point_results[[group]]$power <- statistical_power
+    }
+
+    return(point_results)
   }
 )
 

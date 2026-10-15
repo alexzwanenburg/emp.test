@@ -139,11 +139,13 @@ setMethod(
   signature(object = "empiricalDiffTest"),
   function(
     object,
-    data,
+    data = NULL,
     hypothesis_test_only = FALSE,
     ...
   ) {
     test_output <- list()
+
+    if (is.null(data)) data <- object@summary_data
 
     # Iterate over combinations of groups.
     for (groups in combn(names(data), m = 2L, simplify = FALSE)) {
@@ -182,29 +184,6 @@ setMethod(
       hypothesis_test_only = hypothesis_test_only,
       location = 0.0
     ))
-  }
-)
-
-
-## .compute_test_results --------------------------------------------------------
-setMethod(
-  ".compute_test_results",
-  signature(object = "empiricalDiffTest"),
-  function(
-    object,
-    x,
-    ...
-  ) {
-    # Obtain results.
-    results <- .test(object = object, data = object@summary_data)
-
-    # Compute statistical power based on bootstrap tests.
-    for (group in names(x)) {
-      statistical_power <- sum(x[[group]]$reject_null) / length(x[[group]]$reject_null)
-      results[[group]]$power <- statistical_power
-    }
-
-    return(results)
   }
 )
 

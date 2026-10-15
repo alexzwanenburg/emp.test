@@ -210,11 +210,13 @@ setMethod(
   signature(object = "empiricalEquivalenceTest"),
   function(
     object,
-    data,
+    data = NULL,
     hypothesis_test_only = FALSE,
     ...
   ) {
     test_output <- list()
+
+    if (is.null(data)) data <- object@summary_data
 
     # Iterate over combinations of groups.
     for (groups in combn(names(data), m = 2L, simplify = FALSE)) {

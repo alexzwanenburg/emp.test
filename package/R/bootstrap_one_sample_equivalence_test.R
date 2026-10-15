@@ -205,11 +205,13 @@ setMethod(
   signature(object = "empiricalEquivalenceLocTest"),
   function(
     object,
-    data,
+    data = NULL,
     hypothesis_test_only = FALSE,
     ...
   ) {
     test_output <- list()
+
+    if (is.null(data)) data <- object@summary_data
 
     # Iterate over combinations of groups.
     for (group in names(data)) {
@@ -252,28 +254,5 @@ setMethod(
       tolerance_lower = tolerance_lower,
       tolerance_upper = tolerance_upper
     ))
-  }
-)
-
-
-## .compute_test_results -------------------------------------------------------
-setMethod(
-  ".compute_test_results",
-  signature(object = "empiricalEquivalenceLocTest"),
-  function(
-    object,
-    x,
-    ...
-  ) {
-    # Obtain results.
-    results <- .test(object = object, data = object@summary_data)
-
-    # Compute statistical power based on bootstrap tests.
-    for (group in names(x)) {
-      statistical_power <- sum(x[[group]]$reject_null) / length(x[[group]]$reject_null)
-      results[[group]]$power <- statistical_power
-    }
-
-    return(results)
   }
 )
