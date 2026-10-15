@@ -19,7 +19,7 @@ Imports:
   methods,
   rlang,
   rstream
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
 Collate: 
     'generic_test.R'
     'generic_location_test.R'
