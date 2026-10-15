@@ -296,13 +296,16 @@ setMethod(
     samples <- .sample_data(object, ...)
 
     # Compute test statistics
-    values <- mapply(
-      FUN = .compute_test_statistic,
-      observed = samples$observed,
-      expected = samples$expected,
-      MoreArgs = list("object" = object),
-      SIMPLIFY = FALSE,
-      USE.NAMES = TRUE
+    values <- lapply(
+      samples,
+      function(x, object) {
+        .compute_test_statistic(
+          object = object,
+          observed = x$observed,
+          expected = x$expected
+        )
+      },
+      object = object
     )
 
     return(values)
@@ -320,13 +323,13 @@ setMethod(
     observed,
     expected
   ) {
-    if (!is.function(object@test_statistic)) {
+    if (!is.function(object@summary_function)) {
       ..error_reached_unreachable_code("test_statistic should be a function")
     }
-
+    browser()
     return(do.call(
       object@summary_function,
-      args = C(
+      args = c(
         list(observed, expected),
         object@summary_function_args
       )
