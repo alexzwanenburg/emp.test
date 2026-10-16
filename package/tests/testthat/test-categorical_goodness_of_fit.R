@@ -1,5 +1,3 @@
-testthat::skip()
-
 testthat::test_that(
   "Categorical goodness of fit test functions correctly",
   {
