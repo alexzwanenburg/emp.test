@@ -277,6 +277,15 @@ setMethod(
       index_start <- index_end + 1L
     }
 
+    # Add "all" test, which relies on the test-statistic computed against the
+    # concatenated distribution.
+    if (length(data) > 1L) {
+      sampled_data[["all"]] <- list(
+        "observed" = c(lapply(sampled_data, function(x) (x$observed)), recursive = TRUE),
+        "expected" = c(lapply(sampled_data, function(x) (x$expected)), recursive = TRUE)
+      )
+    }
+
     return(sampled_data)
   }
 )
@@ -345,21 +354,54 @@ setMethod(
   signature(object = "empiricalCategoricalGOFTest"),
   function(
     object,
+    random_values,
     ...
   ) {
-    # UPDATE
-    browser()
+    data <- list()
+    index_start <- 1L
 
-    # Unlike for estimation tests (difference, equivalence, location), we need
-    # sample the input data.
+    # Iterate over variables.
+    for (group in names(object@input_data)) {
+      input_data <- object@input_data[[group]]
+      n_samples <- sum(input_data)
+      index_end <- index_start + n_samples  - 1L
 
-    # Produce samples.
-    samples <- .sample_data(object, ...)
+      # The observed attribute contains a numeric vector with counts, sampled
+      # from the original data.
+      observed <- integer(n_samples) + 1L
+      probability <- cumsum(input_data / n_samples)
+      probability <- probability[1L:(length(probability) - 1L)]
+      for (p in probability) {
+        observed <- observed + as.integer(random_values[index_start:index_end] > p)
+      }
+
+      # Convert to counts
+      observed <- .convert_vector_to_counts(
+        observed,
+        categories = names(input_data)
+      )
+
+      # Set data.
+      data[[group]] <- list(
+        "observed" = observed,
+        "expected" = object@expected * n_samples,
+        "null" = object@summary_data[[group]]
+      )
+    }
+
+    # Add all
+    if (length(object@input_data) > 1L) {
+      data[["all"]] <- list(
+        "observed" = c(lapply(data, function(x) (x$observed)), recursive = TRUE),
+        "expected" = c(lapply(data, function(x) (x$expected)), recursive = TRUE),
+        "null" = object@summary_data$all
+      )
+    }
 
     return(.test(
       object = object,
-      data = samples,
-      hypothesis_test_only = FALSE
+      data = data,
+      hypothesis_test_only = TRUE
     ))
   }
 )
@@ -386,6 +428,15 @@ setMethod(
           "observed" = object@input_data[[group]],
           "expected" = object@expected * sum(object@input_data[[group]]),
           "null" = object@summary_data[[group]]
+        )
+      }
+
+      # Add all
+      if (length(object@input_data) > 1L) {
+        data[["all"]] <- list(
+          "observed" = c(lapply(data, function(x) (x$observed)), recursive = TRUE),
+          "expected" = c(lapply(data, function(x) (x$expected)), recursive = TRUE),
+          "null" = object@summary_data$all
         )
       }
     }
@@ -424,26 +475,39 @@ setMethod(
     hypothesis_test_only = FALSE,
     ...
   ) {
-    browser()
+
     if (is.function(object@summary_function)) {
-      # Case when a test-statistic is computed.
+      # Case when a test-statistic is computed. The p-value is roughly the
+      # number of times the bootstrapped test statistic under the NULL
+      # hypothesis exceeds the observed test statistic: x_1 >= x_0.
+      x <- sort(x_0 - x_1)
+
+      # Compute confidence interval.
+      ci <- stats::quantile(x, probs = 1.0 - object@significance_level, type = 8L, names = FALSE)
+
+      # Reject the null hypothesis if ci >= 0
+      reject_null <- ci[1L] >= 0.0
+
+      if (hypothesis_test_only) {
+        return(list("reject_null" = reject_null))
+      }
+
+      # Compute percentiles on x. Note that this corresponds to type = 8.
+      p <- (seq_along(x_1) - 1.0 / 3.0) / (length(x_1) + 1.0 /3.0)
+      p_value <- suppressWarnings(
+        stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+      )
+
+      return(list(
+        "test_statistic_observed" = x_0,
+        "test_statistic_critical" = stats::quantile(x_1, object@significance_level, names = FALSE),
+        "p_value" = p_value,
+        "reject_null" = reject_null
+      ))
 
     } else {
       # Case when data are evaluated directly.
 
     }
-
-
-
-    # Compute difference between groups. Pre-sort so that both quantile
-    # and p-value computation can work with sorted data.
-    x <- sort(x_1)
-
-    return(..test_difference(
-      object = object,
-      x = x,
-      hypothesis_test_only = hypothesis_test_only,
-      location = object@location
-    ))
   }
 )

@@ -214,7 +214,7 @@ setMethod(
 
       # Combine summary statistic values into lists.
       results <- unlist(results, recursive = FALSE)
-      results <- split(unlist(results), names(object@input_data))
+      results <- split(unlist(results), names(results[[1L]]))
       results <- lapply(results, unname)
 
       object@summary_data <- results
