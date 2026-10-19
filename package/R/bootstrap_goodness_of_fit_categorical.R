@@ -146,7 +146,7 @@ setMethod(
       # pass --> Use bootstrap tests directly.
     } else if (is.character(test_statistic)) {
 
-      # Determine which
+      # Determine which test statistic should be used.
       if (tolower(test_statistic) %in% c("chi", "chi_square", "chi-square", "chi.square")) {
         test_statistic_fun <- test_statistic_chi_square
 
@@ -502,6 +502,7 @@ setMethod(
       )
 
       return(list(
+        "expected" = object@expected,
         "test_statistic_observed" = x_0,
         "test_statistic_critical" = stats::quantile(x_1, object@significance_level, names = FALSE),
         "p_value" = p_value,
