@@ -22,7 +22,7 @@ test_statistic_g <- function(
   equal_or_zero <- (observed == expected) | (observed == 0L)
   if (all(equal_or_zero)) return(0.0)
 
-  return(2.0 * sum(observed[equal_or_zero] * log(observed[equal_or_zero] / expected[equal_or_zero])))
+  return(2.0 * sum(observed[!equal_or_zero] * log(observed[!equal_or_zero] / expected[!equal_or_zero])))
 }
 
 
@@ -34,7 +34,6 @@ test_statistic_cressie_read <- function(
 ) {
   # Default lambda value after Cressie, N. & Read, T. R. C. Multinomial
   # goodness-of-fit tests. J. R. Stat. Soc. Series B Stat. Methodol. 46, 440–464 (1984).
-
   if (lambda == 0.0) {
     return(test_statistic_g(observed = observed, expected = expected))
 
@@ -52,7 +51,7 @@ test_statistic_cressie_read <- function(
   if (all(equal_or_zero)) return(0.0)
 
   return(
-    2.0 / (lamba * (lambda + 1.0)) *
-      sum(observed[equal_or_zero] * ((observed[equal_or_zero] / expected[equal_or_zero])^lambda - 1.0))
+    2.0 / (lambda * (lambda + 1.0)) *
+      sum(observed[!equal_or_zero] * ((observed[!equal_or_zero] / expected[!equal_or_zero])^lambda - 1.0))
   )
 }
