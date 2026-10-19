@@ -6,17 +6,53 @@ NULL
 #'
 #' Performs a goodness-of-fit test on categorical variables.
 #'
-#' @param ... One or more counts of categorical variables that are to be tested.
+#' @param ... One or more categorical variables that are to be tested. Different
+#'   types are allowed. Vectors consisting of `logical`, `character` and
+#'   `factor` type data are allowed. Vectors of `integer` type are also allowed
+#'   if these represent counts of (named) categories.
+#'
 #'   If more than one categorical variable is provided, tests are conducted
 #'   separately for each variable. Note however, that what is being tested
 #'   depends on `expected`.
-#' @param expected descriptions
+#' @param expected The expected distribution. In addition to the `logical`,
+#'   `character`, `factor`, and `integer` (representing counts) types also
+#'   allowed as input variable, `expected` can also be one of the following:
+#'
+#'   * A `numeric` vector, representing the fraction of each category.
+#'
+#'   * A random function that returns vectors of `logical`, `character`,
+#'   `factor` and `integer` (indicating a category, not counts). This function
+#'   is then sampled to identify the expected distribution. The **first**
+#'   argument is expected to be the number of samples drawn.
+#'
+#'   * `NULL` (default): in this case, the expected distribution is considered
+#'   to be the joined distribution of all input variables. This results in an
+#'   *independence* test.
+#'
 #' @param expected_args A named list of additional arguments supplied to
-#'   `expected`, if `expected` is a custom function. The **first** argument of
-#'   `expected` is expected to indicate the number of samples to be drawn.
-#' @param test_statistic description
+#'   `expected`, if `expected` is a custom function.
+#' @param test_statistic Test statistic computed from observed and expected
+#'   data. `test_statistic` can be one of the following:
+#'
+#'   * `"chi_squared"`: computes Pearson's chi-squared test statistic.
+#'
+#'   * `"g"`: computes the g-test's test statistic.
+#'
+#'   * `"cressie_read"`: computes Cressie and Read's test statistic, of which
+#'   both the chi-squared and g-test test statistics are special forms. This
+#'   test statistic has a special parameter `lambda`. If not specificied using
+#'   `test_statistic_args`, `lambda = 2/3` is used, after recommendations by
+#'   Cressie and Read.
+#'
+#'   * A custom function that returns a single positive numeric value. The
+#'   initial **two arguments** are expected to be counts of observed and
+#'   expected categories, respectively.
+#'
+#'   * `NULL`: computes a distribution under the null-hypothesis and compares
+#'   each category of the observations in a point-wise manner.
 #' @param test_statistic_args A named list of arguments that is provided to
-#'   `test_statistic`.
+#'   `test_statistic`. For `"cressie_read"`, a `lambda` parameter can be
+#'   provided.
 #' @inheritParams difference_test
 #'
 #' @details A goodness-of-fit test assesses how closely observed data matches

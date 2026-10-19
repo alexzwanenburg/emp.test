@@ -14,26 +14,57 @@ categorical_goodness_of_fit_test(
 )
 }
 \arguments{
-\item{...}{One or more counts of categorical variables that are to be tested.
+\item{...}{One or more categorical variables that are to be tested. Different
+types are allowed. Vectors consisting of \code{logical}, \code{character} and
+\code{factor} type data are allowed. Vectors of \code{integer} type are also allowed
+if these represent counts of (named) categories.
+
 If more than one categorical variable is provided, tests are conducted
 separately for each variable. Note however, that what is being tested
 depends on \code{expected}.}
 
-\item{expected}{descriptions}
+\item{expected}{The expected distribution. In addition to the \code{logical},
+\code{character}, \code{factor}, and \code{integer} (representing counts) types also
+allowed as input variable, \code{expected} can also be one of the following:
+\itemize{
+\item A \code{numeric} vector, representing the fraction of each category.
+\item A random function that returns vectors of \code{logical}, \code{character},
+\code{factor} and \code{integer} (indicating a category, not counts). This function
+is then sampled to identify the expected distribution. The \strong{first}
+argument is expected to be the number of samples drawn.
+\item \code{NULL} (default): in this case, the expected distribution is considered
+to be the joined distribution of all input variables. This results in an
+\emph{independence} test.
+}}
 
 \item{expected_args}{A named list of additional arguments supplied to
-\code{expected}, if \code{expected} is a custom function. The \strong{first} argument of
-\code{expected} is expected to indicate the number of samples to be drawn.}
+\code{expected}, if \code{expected} is a custom function.}
 
 \item{significance_level}{Significance level for rejecting the null
 hypothesis. The default value is 0.95, which means that the null hypothesis
 is rejected if the p-value of the test is 0.05 or smaller. Must be a number
 between 0.0 and 1.0.}
 
-\item{test_statistic}{description}
+\item{test_statistic}{Test statistic computed from observed and expected
+data. \code{test_statistic} can be one of the following:
+\itemize{
+\item \code{"chi_squared"}: computes Pearson's chi-squared test statistic.
+\item \code{"g"}: computes the g-test's test statistic.
+\item \code{"cressie_read"}: computes Cressie and Read's test statistic, of which
+both the chi-squared and g-test test statistics are special forms. This
+test statistic has a special parameter \code{lambda}. If not specificied using
+\code{test_statistic_args}, \code{lambda = 2/3} is used, after recommendations by
+Cressie and Read.
+\item A custom function that returns a single positive numeric value. The
+initial \strong{two arguments} are expected to be counts of observed and
+expected categories, respectively.
+\item \code{NULL}: computes a distribution under the null-hypothesis and compares
+each category of the observations in a point-wise manner.
+}}
 
 \item{test_statistic_args}{A named list of arguments that is provided to
-\code{test_statistic}.}
+\code{test_statistic}. For \code{"cressie_read"}, a \code{lambda} parameter can be
+provided.}
 }
 \value{
 htest object
