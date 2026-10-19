@@ -147,12 +147,15 @@ setMethod(
     } else if (is.character(test_statistic)) {
 
       # Determine which
-      if (test_statistic == "chi_square") {
+      if (tolower(test_statistic) %in% c("chi", "chi_square", "chi-square", "chi.square")) {
         test_statistic_fun <- test_statistic_chi_square
-      } else if (test_statistic == "g") {
+
+      } else if (tolower(test_statistic) %in% c("g", "g_test", "g-test")) {
         test_statistic_fun <- test_statistic_g
-      } else if (test_statistic == "cressie_read") {
+
+      } else if (tolower(test_statistic) %in% c("cressie_read", "cressie-read", "cr")) {
         test_statistic_fun <- test_statistic_cressie_read
+
       } else {
         rlang::abort(
           message = paste0(
