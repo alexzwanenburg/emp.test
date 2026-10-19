@@ -72,15 +72,29 @@ categorical_goodness_of_fit_test <- function(
     test_statistic_args = NULL
 ) {
   # Create test object.
-  object <- methods::new(
-    "empiricalCategoricalGOFTest",
-    data = list(...),
-    expected = expected,
-    expected_args = expected_args,
-    significance_level = significance_level,
-    test_statistic = test_statistic,
-    test_statistic_args = test_statistic_args
-  )
+  if (!is.null(test_statistic)) {
+    # Test using test statistic.
+    object <- methods::new(
+      "empiricalCategoricalGOFTest",
+      data = list(...),
+      expected = expected,
+      expected_args = expected_args,
+      significance_level = significance_level,
+      test_statistic = test_statistic,
+      test_statistic_args = test_statistic_args
+    )
+
+  } else {
+    # Point test.
+    object <- methods::new(
+      "empiricalCategoricalGOFPointTest",
+      data = list(...),
+      expected = expected,
+      expected_args = expected_args,
+      significance_level = significance_level,
+      test_statistic = test_statistic
+    )
+  }
 
   # Set the number of bootstraps.
   object@n_bootstraps <- 1000L
@@ -222,7 +236,7 @@ setMethod(
         "bootstrap categorical goodness-of-fit hypothesis (", test_statistic, ") test"
       )
     } else if (is.null(test_statistic)) {
-      .Object@name <- "bootstrap categorical goodness-of-fit test"
+      .Object@name <- "bootstrap point-wise categorical goodness-of-fit test"
 
     } else {
       .Object@name <- "bootstrap categorical goodness-of-fit hypothesis test"
@@ -515,39 +529,113 @@ setMethod(
     ...
   ) {
 
-    if (is.function(object@summary_function)) {
-      # Case when a test-statistic is computed. The p-value is roughly the
-      # number of times the bootstrapped test statistic under the NULL
-      # hypothesis exceeds the observed test statistic: x_1 >= x_0.
-      x <- sort(x_0 - x_1)
+    # Case when a test-statistic is computed. The p-value is roughly the
+    # number of times the bootstrapped test statistic under the NULL
+    # hypothesis exceeds the observed test statistic: x_1 >= x_0.
+    x <- sort(x_0 - x_1)
 
-      # Compute confidence interval.
-      ci <- stats::quantile(x, probs = 1.0 - object@significance_level, type = 8L, names = FALSE)
+    # Compute confidence interval.
+    ci <- stats::quantile(x, probs = 1.0 - object@significance_level, type = 8L, names = FALSE)
 
-      # Reject the null hypothesis if ci >= 0
-      reject_null <- ci[1L] >= 0.0
+    # Reject the null hypothesis if ci >= 0
+    reject_null <- ci[1L] >= 0.0
 
-      if (hypothesis_test_only) {
-        return(list("reject_null" = reject_null))
-      }
+    if (hypothesis_test_only) {
+      return(list("reject_null" = reject_null))
+    }
 
-      # Compute percentiles on x. Note that this corresponds to type = 8.
-      p <- (seq_along(x_1) - 1.0 / 3.0) / (length(x_1) + 1.0 /3.0)
-      p_value <- suppressWarnings(
-        stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+    # Compute percentiles on x. Note that this corresponds to type = 8.
+    p <- (seq_along(x_1) - 1.0 / 3.0) / (length(x_1) + 1.0 /3.0)
+    p_value <- suppressWarnings(
+      stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+    )
+
+    return(list(
+      "expected" = object@expected,
+      "test_statistic_observed" = x_0,
+      "test_statistic_critical" = stats::quantile(x_1, object@significance_level, names = FALSE),
+      "p_value" = p_value,
+      "reject_null" = reject_null
+    ))
+  }
+)
+
+
+
+# empiricalCategoricalGOFPointTest object --------------------------------------
+setClass(
+  "empiricalCategoricalGOFPointTest",
+  contains = "empiricalCategoricalGOFTest"
+)
+
+
+
+## .sample_data ----------------------------------------------------------------
+setMethod(
+  ".sample_data",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(object, random_values, ...) {
+    # Produce samples. For categorical goodness-of-fit tests, this
+    # is a vector of input observed data with a matched (random) sample of
+    # expected.
+    data <- object@input_data
+    if (is.null(random_values)) {
+      ..error_reached_unreachable_code("random_values cannot be NULL as expected is always randomised.")
+    }
+
+    # Create vectors of expected.
+    n_samples <- sum(sapply(object@input_data, sum))
+    if (!is.numeric(object@expected)) {
+      ..error_reached_unreachable_code("The expected attribute should either be a function or a numeric vector.")
+    }
+    # The observed attribute contains a numeric vector with probabilities.
+    observed <- integer(n_samples) + 1L
+
+    # Find probability thresholds for each category. The last category is
+    # dropped.
+    probability <- cumsum(object@expected)
+    probability <- probability[1L:(length(probability) - 1L)]
+    for (p in probability) {
+      observed <- observed + as.integer(random_values > p)
+    }
+
+    # Create observed and expected data based on samples.
+    sampled_data <- list()
+    index_start <- 1L
+    for (variable in names(data)) {
+      n_samples <- sum(data[[variable]])
+      index_end <- index_start + n_samples  - 1L
+
+      # Observed is based directly on random_values.
+      observed_count <- .convert_vector_to_counts(
+        observed[index_start:index_end],
+        categories = names(data[[variable]])
       )
 
-      return(list(
-        "expected" = object@expected,
-        "test_statistic_observed" = x_0,
-        "test_statistic_critical" = stats::quantile(x_1, object@significance_level, names = FALSE),
-        "p_value" = p_value,
-        "reject_null" = reject_null
-      ))
+      # Expected is based on the expected attribute, which contains
+      # probabilities.
+      sampled_data[[variable]] <- observed_count
 
-    } else {
-      # Case when data are evaluated directly.
-
+      # Increment random value index counter.
+      index_start <- index_end + 1L
     }
+
+    return(sampled_data)
+  }
+)
+
+
+## ..compute_summary_statistic -------------------------------------------------
+setMethod(
+  "..compute_summary_statistic",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    ...
+  ) {
+    # Produce samples under the null-hypothesis.
+    samples <- .sample_data(object, ...)
+
+    return(samples)
   }
 )
