@@ -147,8 +147,8 @@ setMethod(
     } else if (is.character(test_statistic)) {
 
       # Determine which test statistic should be used.
-      if (tolower(test_statistic) %in% c("chi", "chi_square", "chi-square", "chi.square")) {
-        test_statistic_fun <- test_statistic_chi_square
+      if (tolower(test_statistic) %in% c("chi", "chi_squared", "chi-squared", "chi.squared")) {
+        test_statistic_fun <- test_statistic_chi_squared
 
       } else if (tolower(test_statistic) %in% c("g", "g_test", "g-test")) {
         test_statistic_fun <- test_statistic_g
@@ -159,7 +159,7 @@ setMethod(
       } else {
         rlang::abort(
           message = paste0(
-            "The provided test_statistic is expected to be one of 'chi_square', 'g', 'cressie_read'. ",
+            "The provided test_statistic is expected to be one of 'chi_squared', 'g', 'cressie_read'. ",
             "Found: ", test_statistic, "."
           )
         )
@@ -172,7 +172,7 @@ setMethod(
     } else {
       rlang::abort(
         message = paste0(
-          "test_statistic should be NULL, a function, or one of 'chi-square', 'g', and 'cressie_read'.",
+          "test_statistic should be NULL, a function, or one of 'chi-squared', 'g', and 'cressie_read'.",
           "Found: an invalid value for test_statistic."
         ),
         class = c("emp_test_error", "input_argument_error")

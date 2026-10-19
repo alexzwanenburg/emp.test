@@ -11,7 +11,7 @@ testthat::test_that(
     results_1 <- emp.test::categorical_goodness_of_fit_test(
       x_1,
       x_2,
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     results_2 <- stats::chisq.test(rbind(x_1, x_2))
 
@@ -26,7 +26,7 @@ testthat::test_that(
     results_1char <- emp.test::categorical_goodness_of_fit_test(
       x_1c,
       x_2c,
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     testthat::expect_equal(results_1$x_1$p_value, results_1char$x_1$p_value)
     testthat::expect_equal(results_1$x_2$p_value, results_1char$x_2$p_value)
@@ -38,7 +38,7 @@ testthat::test_that(
     results_1fact <- emp.test::categorical_goodness_of_fit_test(
       x_1f,
       x_2f,
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     testthat::expect_equal(results_1$x_1$p_value, results_1fact$x_1$p_value)
     testthat::expect_equal(results_1$x_2$p_value, results_1fact$x_2$p_value)
@@ -50,7 +50,7 @@ testthat::test_that(
     results_1fact <- emp.test::categorical_goodness_of_fit_test(
       x_1l,
       x_2l,
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     results_2fact <- stats::chisq.test(rbind(
       emp.test:::.convert_vector_to_counts(x_1l, categories = c(FALSE, TRUE)),
@@ -65,7 +65,7 @@ testthat::test_that(
     results_1 <- emp.test::categorical_goodness_of_fit_test(
       x_1,
       expected = c(0.25, 0.5, 0.25),
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     results_2 <- stats::chisq.test(x_1, p = c(0.25, 0.5, 0.25))
 
@@ -83,7 +83,7 @@ testthat::test_that(
     results_1b <- emp.test::categorical_goodness_of_fit_test(
       x_1,
       expected = x_3,
-      test_statistic = "chi_square"
+      test_statistic = "chi_squared"
     )
     testthat::expect_length(results_1b, 1L)
     testthat::expect_setequal(names(results_1b), c("x_1"))

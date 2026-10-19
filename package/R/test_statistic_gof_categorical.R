@@ -1,4 +1,4 @@
-test_statistic_chi_square <- function(
+test_statistic_chi_squared <- function(
   observed,
   expected
 ) {
