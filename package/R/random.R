@@ -116,10 +116,19 @@
 
 .rcat <- function(
     n,
-    n_categories = 3L,
+    n_categories = NULL,
     p_categories = NULL,
     seed = NULL
 ) {
+  if (is.null(n_categories)) {
+    if (is.null(p_categories)) {
+      # Default value of 3.
+      n_categories <- 3L
+    } else {
+      n_categories <- length(p_categories)
+    }
+  }
+
   if (is.null(p_categories)) {
     p_categories <- numeric(n_categories) + 1.0 / n_categories
   }
