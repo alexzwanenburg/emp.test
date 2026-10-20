@@ -229,7 +229,11 @@ testthat::test_that(
       x_2,
       test_statistic = NULL
     )
-    results_2 <- stats::chisq.test(rbind(x_1, x_2))
-
+    testthat::expect_length(results_1, 2L)
+    testthat::expect_setequal(names(results_1), c("x_1", "x_2"))
+    testthat::expect_lte(results_1$x_1$p_value, 0.04)
+    testthat::expect_gte(results_1$x_1$p_value, 0.03)
+    testthat::expect_lte(results_1$x_2$p_value, 0.02)
+    testthat::expect_gte(results_1$x_2$p_value, 0.01)
   }
 )
