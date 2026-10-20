@@ -209,10 +209,27 @@ testthat::test_that(
     testthat::expect_length(results_1n, 1L)
     testthat::expect_setequal(names(results_1n), c("x_1"))
     testthat::expect_equivalent(round(results_1n$x_1$expected, digits = 2L), c(0.25, 0.75))
+  }
+)
 
 
-    # Test without test-statistic.
-    # TODO: requires a separate pathway.
+
+testthat::test_that(
+  "Point-wise categorical goodness of fit test functions correctly",
+  {
+    x_1 <- emp.test:::.rcat(50L, p_categories = c(1/3, 1/3, 1/3), seed = 19L)
+    x_2 <- emp.test:::.rcat(45L, p_categories = c(0.10, 0.8, 0.10), seed = 20L)
+
+    x_1 <- emp.test:::.convert_vector_to_counts(x_1, categories = paste0("c_", seq_len(3L)))
+    x_2 <- emp.test:::.convert_vector_to_counts(x_2, categories = paste0("c_", seq_len(3L)))
+
+    # Test with two different samples against the joint distribution.
+    results_1 <- emp.test::categorical_goodness_of_fit_test(
+      x_1,
+      x_2,
+      test_statistic = NULL
+    )
+    results_2 <- stats::chisq.test(rbind(x_1, x_2))
 
   }
 )

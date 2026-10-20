@@ -494,7 +494,7 @@ setMethod(
       }
     }
 
-    # Iterate over individual of data.
+    # Iterate for each variable and "all".
     for (group in names(data)) {
       # Compute test statistic for the input (or bootstrapped input) data.
       obs_statistic <- .compute_test_statistic(
@@ -565,9 +565,81 @@ setMethod(
 # empiricalCategoricalGOFPointTest object --------------------------------------
 setClass(
   "empiricalCategoricalGOFPointTest",
-  contains = "empiricalCategoricalGOFTest"
+  contains = "empiricalCategoricalGOFTest",
+  slots = list(
+    alternative = "character"
+  ),
+  prototype = list(
+    alternative = "two_sided"
+  )
 )
 
+
+
+## initialize ------------------------------------------------------------------
+setMethod(
+  "initialize",
+  signature(.Object = "empiricalCategoricalGOFPointTest"),
+  function(
+    .Object,
+    alternative = "two_sided",
+    ...
+  ) {
+    # Pass to empiricalCategoricalGOFTest for global attributes.
+    .Object <- callNextMethod()
+
+    if (rlang::is_missing(alternative)) ..error_missing_variable("alternative")
+
+    # Set the alternative hypothesis.
+    .check_parameter_value_is_valid(
+      x = alternative,
+      var_name = "alternative",
+      values = c("two_sided", "two.sided", "greater", "less")
+    )
+    if (alternative == "two.sided") alternative <- "two-sided"
+    .Object@alternative <- alternative
+
+    # Set percentiles.
+    .Object <- .set_percentiles(object = .Object)
+
+    return(.Object)
+  }
+)
+
+
+
+## .set_percentiles ------------------------------------------------------------
+setMethod(
+  ".set_percentiles",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    ...
+  ) {
+    if (object@alternative == "two_sided") {
+      # group 1 has either smaller or larger location than group 2
+      # by default (0.025, 0.975)
+      pctl <- c(0.5 - object@significance_level / 2.0, 0.5 + object@significance_level / 2.0)
+
+    } else if (object@alternative == "less") {
+      # group 1 has smaller summary statistic than group 2
+      # by default (0.95)
+      pctl <- object@significance_level
+
+    } else if (object@alternative == "greater") {
+      # group 1 has larger summary statistic than group 2
+      # by default (0.05)
+      pctl <- 1.0 - object@significance_level
+
+    } else {
+      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+    }
+
+    object@percentiles <- pctl
+
+    return(object)
+  }
+)
 
 
 ## .sample_data ----------------------------------------------------------------
@@ -637,5 +709,193 @@ setMethod(
     samples <- .sample_data(object, ...)
 
     return(samples)
+  }
+)
+
+## .require_compute_summary_data -----------------------------------------------
+setMethod(
+  ".require_compute_summary_data",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    ...
+  ) {
+    # Even though summary_function is NULL, we need to sample the data under
+    # the null hypothesis.
+    return(TRUE)
+  }
+)
+
+
+## .set_summary_data -----------------------------------------------------------
+setMethod(
+  ".set_summary_data",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    x,
+    ...
+  ) {
+    # Combine summary statistic values into lists for each variable.
+    variables <- names(object@input_data)
+    categories <- names(object@input_data[[1L]])
+
+    # Remove division by chunk and bootstrap by unlisting twice.
+    x <- unlist(unlist(x, recursive = FALSE), recursive = FALSE)
+
+    # Convert vectors with counts for each category to a matrix for each
+    # variable.
+    results <- list()
+    for (variable in variables) {
+      y <- matrix(
+        unlist(x[names(x) == variable]),
+        ncol = length(categories),
+        byrow = TRUE
+      )
+      colnames(y) <- categories
+      results[[variable]] <- y
+    }
+
+    # Store results.
+    object@summary_data <- results
+
+    return(object)
+  }
+)
+
+
+
+## ..bootstrap_test ------------------------------------------------------------
+setMethod(
+  "..bootstrap_test",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    random_values,
+    ...
+  ) {
+    data <- list()
+    index_start <- 1L
+
+    # Iterate over variables.
+    for (group in names(object@input_data)) {
+      input_data <- object@input_data[[group]]
+      n_samples <- sum(input_data)
+      index_end <- index_start + n_samples  - 1L
+
+      # The observed attribute contains a numeric vector with counts, sampled
+      # from the original data.
+      observed <- integer(n_samples) + 1L
+      probability <- cumsum(input_data / n_samples)
+      probability <- probability[1L:(length(probability) - 1L)]
+      for (p in probability) {
+        observed <- observed + as.integer(random_values[index_start:index_end] > p)
+      }
+
+      # Convert to counts
+      observed <- .convert_vector_to_counts(
+        observed,
+        categories = names(input_data)
+      )
+
+      # Set data.
+      data[[group]] <- list(
+        "observed" = observed,
+        "expected" = object@expected * n_samples,
+        "null" = object@summary_data[[group]]
+      )
+    }
+
+    return(.test(
+      object = object,
+      data = data,
+      hypothesis_test_only = TRUE
+    ))
+  }
+)
+
+
+
+## .test -----------------------------------------------------------------------
+setMethod(
+  ".test",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    data = NULL,
+    hypothesis_test_only = FALSE,
+    ...
+  ) {
+    test_output <- list()
+
+    if (is.null(data)) {
+      # Collect data for point-estimates.
+      data <- list()
+      for (group in names(object@input_data)) {
+        data[[group]] <- list(
+          "observed" = object@input_data[[group]],
+          "expected" = object@expected * sum(object@input_data[[group]]),
+          "null" = object@summary_data[[group]]
+        )
+      }
+    }
+
+    # Iterate over variables.
+    for (group in names(data)) {
+      results <- ..test(
+        object = object,
+        x_0 = data[[group]]$observed,
+        x_1 = data[[group]]$null,
+        hypothesis_test_only = hypothesis_test_only
+      )
+      test_output[[group]] <- results
+    }
+
+    return(test_output)
+  }
+)
+
+
+
+## ..test ----------------------------------------------------------------------
+setMethod(
+  "..test",
+  signature(object = "empiricalCategoricalGOFPointTest"),
+  function(
+    object,
+    x_0,
+    x_1,
+    hypothesis_test_only = FALSE,
+    ...
+  ) {
+
+    categories <- names(object@input_data[[1L]])
+
+    results_list <- list()
+    for (category in categories) {
+      results_list[[category]] <- ..test_difference(
+        object = object,
+        x = sort(x_1[, category]),
+        location = unname(x_0[category]),
+        hypothesis_test_only = hypothesis_test_only
+      )
+
+      # Remove effect.
+      results_list[[category]]$effect <- NULL
+    }
+
+    if (hypothesis_test_only) {
+      return(list(
+        "reject_null" = any(sapply(results_list, function(x) (x$reject_null)))
+      ))
+    }
+
+    return(list(
+      "expected" = object@expected,
+      "observed" = x_0,
+      "pointwise_tests" = results_list,
+      "p_value" = min(sapply(results_list, function(x) (x$p_value))),
+      "reject_null" = any(sapply(results_list, function(x) (x$reject_null)))
+    ))
   }
 )

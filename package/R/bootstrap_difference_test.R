@@ -316,13 +316,13 @@ setMethod(
   if (hypothesis_test_only) {
     # Test null hypothesis and compute 0-value.
     if (object@alternative == "two_sided") {
-      reject_null <- ci[1L] >= location || (ci[2L] <= location)
+      reject_null <- ci[1L] > location || (ci[2L] < location)
 
     } else if (object@alternative == "less") {
-      reject_null <- ci[1L] <= location
+      reject_null <- ci[1L] < location
 
     } else if (object@alternative == "greater") {
-      reject_null <- ci[1L] >= location
+      reject_null <- ci[1L] > location
 
     } else {
       ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))

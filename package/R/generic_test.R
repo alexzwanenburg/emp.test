@@ -181,12 +181,7 @@ setMethod(
     # generation of random values based on the bootstraps created by
     # .generate_chunks. ..compute_summary_statistic then computes statistics
     # within each bootstraps.
-    if (is.null(object@summary_function)) {
-      # Propagate input data to summary data if there is no summary function. This
-      # is allowed for tests that do not need a summary function, e.g. mean.
-      object@summary_data <- object@input_data
-
-    } else {
+    if (.require_compute_summary_data(object)) {
       # Determine distribution of bootstraps to available threads.
       bootstraps <- .generate_chunks(
         object = object,
@@ -212,16 +207,19 @@ setMethod(
         )
       }
 
-      # Combine summary statistic values into lists.
-      results <- unlist(results, recursive = FALSE)
-      results <- split(unlist(results), names(results[[1L]]))
-      results <- lapply(results, unname)
+      object <- .set_summary_data(object = object, x = results)
 
-      object@summary_data <- results
+    } else {
+      # Propagate input data to summary data if there is no summary function. This
+      # is allowed for tests that do not need a summary function, e.g. mean.
+      object@summary_data <- object@input_data
     }
 
     # Determine the number of samples that need to be drawn.
     object@n_draw_summary_samples <- get_n_draw_summary_samples(object)
+
+    # Point test
+    point_results <- .test(object = object)
 
     # Conduct tests on bootstraps of the summary data.
     bootstraps <- .generate_chunks(
@@ -229,9 +227,7 @@ setMethod(
       cl = cl
     )
 
-    # Point test
-    point_results <- .test(object = object)
-
+    # Compute power.
     if (length(cl) <= 1L) {
       power_results <- mapply(
         FUN = .bootstrap_test,
@@ -510,3 +506,49 @@ setMethod(
 
 ## generic ---------------------------------------------------------------------
 setGeneric(".set_percentiles", function(object, ...) standardGeneric(".set_percentiles"))
+
+
+
+# .set_summary_data ------------------------------------------------------------
+setGeneric(".set_summary_data", function(object, ...) standardGeneric(".set_summary_data"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".set_summary_data",
+  signature(object = "empiricalTest"),
+  function(
+    object,
+    x,
+    ...
+  ) {
+    # Combine summary statistic values into lists.
+    x <- unlist(x, recursive = FALSE)
+    x <- split(unlist(x), names(x[[1L]]))
+    x <- lapply(x, unname)
+
+    object@summary_data <- x
+
+    return(object)
+  }
+)
+
+
+
+# .require_compute_summary_data ------------------------------------------------
+
+## generic ---------------------------------------------------------------------
+setGeneric(".require_compute_summary_data", function(object, ...) standardGeneric(".require_compute_summary_data"))
+
+## empiricalTest ---------------------------------------------------------------
+setMethod(
+  ".require_compute_summary_data",
+  signature(object = "empiricalTest"),
+  function(
+    object,
+    ...
+  ) {
+    # The default is to not compute summary data when there is no summary
+    # function.
+    return(!is.null(object@summary_function))
+  }
+)
