@@ -9,11 +9,13 @@ setClass(
   slots = list(
     alternative = "character",
     alternative_values = "character",
+    percentiles = "numeric",
     requires_summary_function = "logical"
   ),
   prototype = list(
     alternative = "two.sided",
     alternative_values = c("two.sided", "two_sided", "greater", "less"),
+    percentiles = NA_real_,
     requires_summary_function = FALSE
   )
 )
