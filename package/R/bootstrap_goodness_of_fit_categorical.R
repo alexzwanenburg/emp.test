@@ -455,6 +455,30 @@ setMethod(
 
 
 
+## .set_summary_data -----------------------------------------------------------
+setMethod(
+  ".set_summary_data",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    x,
+    ...
+  ) {
+    # Combine summary statistic values into lists.
+    x <- unlist(x, recursive = FALSE)
+    x <- split(unlist(x), names(x[[1L]]))
+    x <- lapply(x, unname)
+    x <- lapply(x, sort)
+
+    # Pre-sort the summary data, as the summary data will not be touched.
+    object@summary_data <- x
+
+    return(object)
+  }
+)
+
+
+
 ## ..bootstrap_test ------------------------------------------------------------
 setMethod(
   "..bootstrap_test",
@@ -561,7 +585,8 @@ setMethod(
         object = object,
         x_0 = obs_statistic,
         x_1 = data[[group]]$null,
-        hypothesis_test_only = hypothesis_test_only
+        hypothesis_test_only = hypothesis_test_only,
+        cache_name = group
       )
       test_output[[group]] <- results
     }
@@ -580,14 +605,18 @@ setMethod(
     x_0,
     x_1,
     hypothesis_test_only = FALSE,
+    cache_name = NULL,
     ...
   ) {
+    if (is.null(cache_name)) ..error_reached_unreachable_code("cache_name cannot be missing")
+
     # Use ..test_difference for consistency.
     results <- ..test_difference(
       object = object,
-      x = sort(x_1),
+      x = x_1,
       location = x_0,
-      hypothesis_test_only = hypothesis_test_only
+      hypothesis_test_only = hypothesis_test_only,
+      cache_name = cache_name
     )
 
     if (hypothesis_test_only) {
@@ -723,6 +752,8 @@ setMethod(
   }
 )
 
+
+
 ## .require_compute_summary_data -----------------------------------------------
 setMethod(
   ".require_compute_summary_data",
@@ -736,6 +767,7 @@ setMethod(
     return(TRUE)
   }
 )
+
 
 
 ## .set_summary_data -----------------------------------------------------------
@@ -884,7 +916,6 @@ setMethod(
     cache_name = NULL,
     ...
   ) {
-
     if (is.null(cache_name)) ..error_reached_unreachable_code("cache_name cannot be missing")
 
     categories <- names(object@input_data[[1L]])
