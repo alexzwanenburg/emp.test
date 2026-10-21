@@ -80,6 +80,16 @@ testthat::test_that(
       paired = TRUE
     )
     testthat::expect_gt(results_6$`x_2 - x_1`$p_value, results_5$`x_2 - x_1`$p_value)
+
+    # Tolerance using a function that returns a single value
+    tol_fun <- function(x1, x2) (return(0.1))
+    results_7 <- emp.test::equivalence_test(
+      x_1 = x_1,
+      x_2 = x_2,
+      tolerance = tol_fun,
+      paired = TRUE
+    )
+    testthat::expect_equal(results_1$`x_2 - x_1`$p_value, results_7$`x_2 - x_1`$p_value)
   }
 )
 

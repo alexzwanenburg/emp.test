@@ -142,22 +142,26 @@
       )
     }
 
+    # Aggregate to a 1 or 2-column matrix. This is notably faster than
+    # sapply(tolerance, function(x) (x[1L]))
+    tolerance <- matrix(unlist(tolerance), ncol = length(tolerance[[1L]]), byrow = TRUE)
     if (object@alternative == "equivalent") {
-      if (length(tolerance[[1L]]) > 1L) {
-        tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
-        tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
+      if (ncol(tolerance) > 1L) {
+        tolerance_lower <- tolerance[, 1L]
+        tolerance_upper <- tolerance[, 2L]
       } else {
-        tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
+
+        tolerance_upper <- tolerance[, 1L]
         tolerance_lower <- -tolerance_upper
       }
     } else if (object@alternative == "not_inferior") {
-      tolerance_lower <- sapply(tolerance, function(x) (x[1L]))
+      tolerance_lower <- tolerance[, 1L]
 
     } else if (object@alternative == "not_superior") {
-      if (length(tolerance[[1L]]) > 1L) {
-        tolerance_upper <- sapply(tolerance, function(x) (x[2L]))
+      if (ncol(tolerance) > 1L) {
+        tolerance_upper <- tolerance[, 2L]
       } else {
-        tolerance_upper <- sapply(tolerance, function(x) (x[1L]))
+        tolerance_upper <- tolerance[, 1L]
       }
 
     } else {
