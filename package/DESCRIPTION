@@ -21,6 +21,7 @@ Imports:
   rstream
 Config/roxygen2/version: 8.1.1
 Collate: 
+    'aaa.R'
     'generic_test.R'
     'generic_location_test.R'
     'bootstrap_difference_test.R'

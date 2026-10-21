@@ -8,6 +8,7 @@ categorical_goodness_of_fit_test(
   ...,
   expected = NULL,
   expected_args = NULL,
+  alternative = "two_sided",
   significance_level = 0.95,
   test_statistic = "cressie_read",
   test_statistic_args = NULL
@@ -39,6 +40,10 @@ to be the joined distribution of all input variables. This results in an
 
 \item{expected_args}{A named list of additional arguments supplied to
 \code{expected}, if \code{expected} is a custom function.}
+
+\item{alternative}{The alternative hypothesis. One of \code{"two_sided"}
+(default), \code{"greater"} and \code{"less"}. This parameter is only used if the
+test is performed point-wise (\code{test_statistic = NULL}).}
 
 \item{significance_level}{Significance level for rejecting the null
 hypothesis. The default value is 0.95, which means that the null hypothesis

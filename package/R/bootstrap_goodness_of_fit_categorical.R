@@ -31,6 +31,9 @@ NULL
 #'
 #' @param expected_args A named list of additional arguments supplied to
 #'   `expected`, if `expected` is a custom function.
+#' @param alternative The alternative hypothesis. One of `"two_sided"`
+#'   (default), `"greater"` and `"less"`. This parameter is only used if the
+#'   test is performed point-wise (`test_statistic = NULL`).
 #' @param test_statistic Test statistic computed from observed and expected
 #'   data. `test_statistic` can be one of the following:
 #'
@@ -67,10 +70,15 @@ categorical_goodness_of_fit_test <- function(
     ...,
     expected = NULL,
     expected_args = NULL,
+    alternative = "two_sided",
     significance_level = 0.95,
     test_statistic = "cressie_read",
     test_statistic_args = NULL
 ) {
+  # Summary data is used unchanged for determining confidence intervals, and
+  # thus can be cached.
+  on.exit(.clear_emp_test_global_env())
+
   # Create test object.
   if (!is.null(test_statistic)) {
     # Test using test statistic.
@@ -91,6 +99,7 @@ categorical_goodness_of_fit_test <- function(
       data = list(...),
       expected = expected,
       expected_args = expected_args,
+      alternative = alternative,
       significance_level = significance_level,
       test_statistic = test_statistic
     )
@@ -110,7 +119,13 @@ categorical_goodness_of_fit_test <- function(
 # empiricalCategoricalGOFTest object -------------------------------------------
 setClass(
   "empiricalCategoricalGOFTest",
-  contains = "empiricalGenericGOFTest"
+  contains = "empiricalGenericGOFTest",
+  slots = list(
+    alternative = "character"
+  ),
+  prototype = list(
+    alternative = "less"
+  )
 )
 
 
@@ -229,6 +244,9 @@ setMethod(
       )
     }
 
+    # Set percentiles
+    .Object <- .set_percentiles(object = .Object)
+
     # Set name
     if (is.character(test_statistic)) {
       test_statistic <- gsub("_", "-", test_statistic)
@@ -245,6 +263,42 @@ setMethod(
     return(.Object)
   }
 )
+
+
+
+## .set_percentiles ------------------------------------------------------------
+setMethod(
+  ".set_percentiles",
+  signature(object = "empiricalCategoricalGOFTest"),
+  function(
+    object,
+    ...
+  ) {
+    if (object@alternative == "two_sided") {
+      # group 1 has either smaller or larger location than group 2
+      # by default (0.025, 0.975)
+      pctl <- c(0.5 - object@significance_level / 2.0, 0.5 + object@significance_level / 2.0)
+
+    } else if (object@alternative == "less") {
+      # group 1 has smaller summary statistic than group 2
+      # by default (0.95)
+      pctl <- object@significance_level
+
+    } else if (object@alternative == "greater") {
+      # group 1 has larger summary statistic than group 2
+      # by default (0.05)
+      pctl <- 1.0 - object@significance_level
+
+    } else {
+      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
+    }
+
+    object@percentiles <- pctl
+
+    return(object)
+  }
+)
+
 
 
 ## get_n_draw_input_samples ----------------------------------------------------
@@ -528,35 +582,29 @@ setMethod(
     hypothesis_test_only = FALSE,
     ...
   ) {
-
-    # Case when a test-statistic is computed. The p-value is roughly the
-    # number of times the bootstrapped test statistic under the NULL
-    # hypothesis exceeds the observed test statistic: x_1 >= x_0.
-    x <- sort(x_0 - x_1)
-
-    # Compute confidence interval.
-    ci <- stats::quantile(x, probs = 1.0 - object@significance_level, type = 8L, names = FALSE)
-
-    # Reject the null hypothesis if ci >= 0
-    reject_null <- ci[1L] >= 0.0
-
-    if (hypothesis_test_only) {
-      return(list("reject_null" = reject_null))
-    }
-
-    # Compute percentiles on x. Note that this corresponds to type = 8.
-    p <- (seq_along(x_1) - 1.0 / 3.0) / (length(x_1) + 1.0 /3.0)
-    p_value <- suppressWarnings(
-      stats::approx(x = x, y = p, xout = 0.0, rule = 2L)$y
+    # Use ..test_difference for consistency.
+    results <- ..test_difference(
+      object = object,
+      x = sort(x_1),
+      location = x_0,
+      hypothesis_test_only = hypothesis_test_only
     )
 
-    return(list(
-      "expected" = object@expected,
-      "test_statistic_observed" = x_0,
-      "test_statistic_critical" = stats::quantile(x_1, object@significance_level, names = FALSE),
-      "p_value" = p_value,
-      "reject_null" = reject_null
-    ))
+    if (hypothesis_test_only) {
+      return(list("reject_null" = results$reject_null))
+    }
+
+    # Add additional data.
+    results <- c(
+      results,
+      list(
+        "expected" = object@expected,
+        "test_statistic_observed" = x_0,
+        "test_statistic_critical" = max(results$confidence_interval)
+      )
+    )
+
+    return(results)
   }
 )
 
@@ -566,9 +614,6 @@ setMethod(
 setClass(
   "empiricalCategoricalGOFPointTest",
   contains = "empiricalCategoricalGOFTest",
-  slots = list(
-    alternative = "character"
-  ),
   prototype = list(
     alternative = "two_sided"
   )
@@ -599,47 +644,13 @@ setMethod(
     if (alternative == "two.sided") alternative <- "two-sided"
     .Object@alternative <- alternative
 
-    # Set percentiles.
+    # Update percentiles.
     .Object <- .set_percentiles(object = .Object)
 
     return(.Object)
   }
 )
 
-
-
-## .set_percentiles ------------------------------------------------------------
-setMethod(
-  ".set_percentiles",
-  signature(object = "empiricalCategoricalGOFPointTest"),
-  function(
-    object,
-    ...
-  ) {
-    if (object@alternative == "two_sided") {
-      # group 1 has either smaller or larger location than group 2
-      # by default (0.025, 0.975)
-      pctl <- c(0.5 - object@significance_level / 2.0, 0.5 + object@significance_level / 2.0)
-
-    } else if (object@alternative == "less") {
-      # group 1 has smaller summary statistic than group 2
-      # by default (0.95)
-      pctl <- object@significance_level
-
-    } else if (object@alternative == "greater") {
-      # group 1 has larger summary statistic than group 2
-      # by default (0.05)
-      pctl <- 1.0 - object@significance_level
-
-    } else {
-      ..error_reached_unreachable_code(paste0("alternative attribute was not correctly set: ", object@alternative))
-    }
-
-    object@percentiles <- pctl
-
-    return(object)
-  }
-)
 
 
 ## .sample_data ----------------------------------------------------------------
@@ -753,6 +764,9 @@ setMethod(
         byrow = TRUE
       )
       colnames(y) <- categories
+
+      # Pre-sort matrix columns
+      y <- apply(X = y, MARGIN = 2, FUN = sort)
       results[[variable]] <- y
     }
 
@@ -846,7 +860,8 @@ setMethod(
         object = object,
         x_0 = data[[group]]$observed,
         x_1 = data[[group]]$null,
-        hypothesis_test_only = hypothesis_test_only
+        hypothesis_test_only = hypothesis_test_only,
+        cache_name = group
       )
       test_output[[group]] <- results
     }
@@ -866,8 +881,11 @@ setMethod(
     x_0,
     x_1,
     hypothesis_test_only = FALSE,
+    cache_name = NULL,
     ...
   ) {
+
+    if (is.null(cache_name)) ..error_reached_unreachable_code("cache_name cannot be missing")
 
     categories <- names(object@input_data[[1L]])
 
@@ -875,9 +893,10 @@ setMethod(
     for (category in categories) {
       results_list[[category]] <- ..test_difference(
         object = object,
-        x = sort(x_1[, category]),
+        x = x_1[, category],
         location = unname(x_0[category]),
-        hypothesis_test_only = hypothesis_test_only
+        hypothesis_test_only = hypothesis_test_only,
+        cache_name = paste0(cache_name, "--", category)
       )
 
       # Remove effect.

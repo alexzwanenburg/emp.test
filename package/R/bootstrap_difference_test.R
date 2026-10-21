@@ -283,15 +283,24 @@ setMethod(
 
 
 
-# bootstrap test ---------------------------------------------------------------
+# ..test_difference ------------------------------------------------------------
 ..test_difference <- function(
     object,
     x,
     hypothesis_test_only,
-    location = 0.0
+    location = 0.0,
+    cache_name = NULL
 ) {
   # Compute confidence interval.
-  ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
+  if (!is.character(cache_name)) {
+    ci <- stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
+  } else {
+    ci <- rlang::env_cache(
+      env = emp_test_global_env,
+      nm = paste0(cache_name, "_ci"),
+      default = stats::quantile(x, probs = object@percentiles, type = 8L, names = FALSE)
+    )
+  }
 
   # Early break in case the confidence interval is singular.
   if (length(ci) == 2L) {
