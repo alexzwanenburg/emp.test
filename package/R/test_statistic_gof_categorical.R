@@ -55,3 +55,20 @@ test_statistic_cressie_read <- function(
       sum(observed[!equal_or_zero] * ((observed[!equal_or_zero] / expected[!equal_or_zero])^lambda - 1.0))
   )
 }
+
+
+
+test_statistic_ks <- function(
+    observed,
+    expected
+) {
+  return(max(abs(observed - expected)))
+}
+
+
+test_statistic_kuiper <- function(
+    observed,
+    expected
+) {
+  return(max(observed - expected) + max(expected - observed))
+}
