@@ -11,6 +11,7 @@
 }
 
 
+
 .runif <- function(
     n,
     min = 0.0,
@@ -20,9 +21,19 @@
   # Start rstream.
   rstream <- .start_random_number_stream(seed = seed)
   p <- rstream::rstream.sample(rstream, n)  # [0, 1]
-  x <- p * (max - min) + min  # [min, max]
+  x <- .qunif(p, min = min, max = max)
 
   return(x)
+}
+
+
+
+.qunif <- function(
+    p,
+    min = 0.0,
+    max = 1.0
+) {
+  return(p * (max - min) + min)
 }
 
 
@@ -34,6 +45,28 @@
     alpha = 0.5,
     beta = 2.0,
     seed = NULL
+) {
+  # Draw n values from an uniform distribution. Avoid extreme tails for
+  # numerical reasons.
+  p <- .runif(n = n, min = 0.0, max = 1.0, seed = seed)
+
+  return(.qagn(
+    p = p,
+    location = location,
+    scale = scale,
+    alpha = alpha,
+    beta = beta
+  ))
+}
+
+
+
+.qagn <- function(
+    p,
+    location = 0.0,
+    scale = 1.0,
+    alpha = 0.5,
+    beta = 2.0
 ) {
   # Random values drawn according to an asymmetric generalised normal
   # distribution. Here the asymmetric generalised normal distribution is a
@@ -52,9 +85,6 @@
   # Scale cannot be zero or negative.
   if (scale <= 0.0) stop("scale must be strictly positive.")
 
-  # Draw n values from an uniform distribution. Avoid extreme tails for
-  # numerical reasons.
-  p <- .runif(n = n, seed = seed)
   p[p < sqrt(.Machine$double.eps)] <- sqrt(.Machine$double.eps)
   p[p > 1.0 - sqrt(.Machine$double.eps)] <- 1.0 - sqrt(.Machine$double.eps)
 
@@ -72,7 +102,7 @@
 
   # Compute p for the quantile function of the symmetric generalised normal
   # distribution.
-  p_sgnd <- numeric(n)
+  p_sgnd <- numeric(length(p))
   p_sgnd[p_less] <- p[p_less] / (2.0 * alpha)
   p_sgnd[p_greater] <- (1.0 + p[p_greater] - 2.0 * alpha) / (2.0 * (1.0 - alpha))
 
@@ -85,7 +115,7 @@
   )^(1.0 / beta)
 
   # Populate array of values x.
-  x <- numeric(n)
+  x <- numeric(length(p))
   x[p_less] <- location + scale / (1.0 - alpha) * x_sgnd[p_less]
   x[p_greater] <- location + scale / alpha * x_sgnd[p_greater]
 
@@ -100,15 +130,16 @@
     sd = 1.0,
     seed = NULL
 ) {
+  p <- .runif(n = n, min = 0.0, max = 1.0, seed = seed)
+
   # Normal distribution is a special case of an asymmetric generalised normal
   # distribution.
-  return(.ragn(
-    n = n,
+  return(.qagn(
+    p = p,
     location = mean,
     scale = sd / sqrt(2.0),
     alpha = 0.5,
-    beta = 2.0,
-    seed = seed
+    beta = 2.0
   ))
 }
 
@@ -133,12 +164,6 @@
     p_categories <- numeric(n_categories) + 1.0 / n_categories
   }
 
-  if (!all.equal(sum(p_categories), 1.0)) {
-    rlang::abort(
-      message = paste0("p_categories should sum to 1.0. Found: ", sum(p_categories))
-    )
-  }
-
   if (length(p_categories) != n_categories) {
     rlang::abort(
       message = paste0(
@@ -150,8 +175,27 @@
 
   # Draw random numbers.
   p <- .runif(n = n, seed = seed)
+
+  return(.qcat(
+    p = p,
+    p_categories = p_categories
+  ))
+}
+
+
+
+.qcat <- function(
+    p,
+    p_categories
+) {
+  if (!all.equal(sum(p_categories), 1.0)) {
+    rlang::abort(
+      message = paste0("p_categories should sum to 1.0. Found: ", sum(p_categories))
+    )
+  }
+
   p_categories <- cumsum(p_categories)
-  x <- integer(n) + 1L
+  x <- integer(length(p_categories)) + 1L
   for (p_cat in p_categories) {
     x[p > p_cat] <- x[p > p_cat] + 1L
   }
