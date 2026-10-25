@@ -53,13 +53,15 @@ between 0.0 and 1.0.}
 \item{test_statistic}{Test statistic computed from observed and expected
 data. \code{test_statistic} can be one of the following:
 \itemize{
-\item \code{"chi_squared"}: computes Pearson's chi-squared test statistic.
+\item \code{"chi-squared"}: computes Pearson's chi-squared test statistic.
 \item \code{"g"}: computes the g-test's test statistic.
-\item \code{"cressie_read"}: computes Cressie and Read's test statistic, of which
+\item \code{"cressie-read"}: computes Cressie and Read's test statistic, of which
 both the chi-squared and g-test test statistics are special forms. This
-test statistic has a special parameter \code{lambda}. If not specificied using
+test statistic has a special parameter \code{lambda}. If not specified using
 \code{test_statistic_args}, \code{lambda = 2/3} is used, after recommendations by
 Cressie and Read.
+\item \code{"kolmogorov-smirnov"}: Computes the Kolmogorov-Smirnov test statistic.
+\item \code{"kuiper"}: Computes Kuiper's test statistic.
 \item A custom function that returns a single positive numeric value. The
 initial \strong{two arguments} are expected to be counts of observed and
 expected categories, respectively.

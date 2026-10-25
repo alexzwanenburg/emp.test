@@ -195,7 +195,7 @@
   }
 
   p_categories <- cumsum(p_categories)
-  x <- integer(length(p_categories)) + 1L
+  x <- integer(length(p)) + 1L
   for (p_cat in p_categories) {
     x[p > p_cat] <- x[p > p_cat] + 1L
   }

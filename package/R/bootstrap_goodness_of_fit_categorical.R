@@ -37,15 +37,19 @@ NULL
 #' @param test_statistic Test statistic computed from observed and expected
 #'   data. `test_statistic` can be one of the following:
 #'
-#'   * `"chi_squared"`: computes Pearson's chi-squared test statistic.
+#'   * `"chi-squared"`: computes Pearson's chi-squared test statistic.
 #'
 #'   * `"g"`: computes the g-test's test statistic.
 #'
-#'   * `"cressie_read"`: computes Cressie and Read's test statistic, of which
+#'   * `"cressie-read"`: computes Cressie and Read's test statistic, of which
 #'   both the chi-squared and g-test test statistics are special forms. This
-#'   test statistic has a special parameter `lambda`. If not specificied using
+#'   test statistic has a special parameter `lambda`. If not specified using
 #'   `test_statistic_args`, `lambda = 2/3` is used, after recommendations by
 #'   Cressie and Read.
+#'
+#'   * `"kolmogorov-smirnov"`: Computes the Kolmogorov-Smirnov test statistic.
+#'
+#'   * `"kuiper"`: Computes Kuiper's test statistic.
 #'
 #'   * A custom function that returns a single positive numeric value. The
 #'   initial **two arguments** are expected to be counts of observed and
@@ -221,10 +225,17 @@ setMethod(
       } else if (tolower(test_statistic) %in% c("cressie_read", "cressie-read", "cr")) {
         test_statistic_fun <- test_statistic_cressie_read
 
+      } else if (tolower(test_statistic) %in% c("ks", "kolmogorov_smirnov", "kolmogorov-smirnov")) {
+        test_statistic_fun <- test_statistic_ks
+
+      } else if (tolower(test_statistic) %in% c("kuiper")) {
+        test_statistic_fun <- test_statistic_kuiper
+
       } else {
         rlang::abort(
           message = paste0(
-            "The provided test_statistic is expected to be one of 'chi_squared', 'g', 'cressie_read'. ",
+            "test_statistic should be NULL, a function, or one of 'chi-squared', 'g', 'cressie_read', ",
+            "'kolmogorov-smirnov' and 'kuiper'.",
             "Found: ", test_statistic, "."
           )
         )
@@ -237,7 +248,8 @@ setMethod(
     } else {
       rlang::abort(
         message = paste0(
-          "test_statistic should be NULL, a function, or one of 'chi-squared', 'g', and 'cressie_read'.",
+          "test_statistic should be NULL, a function, or one of 'chi-squared', 'g', 'cressie_read', ",
+          "'kolmogorov-smirnov' and 'kuiper'.",
           "Found: an invalid value for test_statistic."
         ),
         class = c("emp_test_error", "input_argument_error")

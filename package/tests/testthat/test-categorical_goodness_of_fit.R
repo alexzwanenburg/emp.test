@@ -209,6 +209,28 @@ testthat::test_that(
     testthat::expect_length(results_1n, 1L)
     testthat::expect_setequal(names(results_1n), c("x_1"))
     testthat::expect_equivalent(round(results_1n$x_1$expected, digits = 2L), c(0.25, 0.75))
+
+    # Test using kolmogorov-smirnov test statistic.
+    results_1o <- emp.test::categorical_goodness_of_fit_test(
+      x_1,
+      expected = x_3,
+      test_statistic = "kolmogorov_smirnov"
+    )
+    testthat::expect_length(results_1o, 1L)
+    testthat::expect_setequal(names(results_1o), c("x_1"))
+    testthat::expect_lte(results_1o$x_1$p_value, 0.03)
+    testthat::expect_gte(results_1o$x_1$p_value, 0.02)
+
+    # Test using kuiper test statistic.
+    results_1p <- emp.test::categorical_goodness_of_fit_test(
+      x_1,
+      expected = x_3,
+      test_statistic = "kuiper"
+    )
+    testthat::expect_length(results_1p, 1L)
+    testthat::expect_setequal(names(results_1p), c("x_1"))
+    testthat::expect_lte(results_1p$x_1$p_value, 0.02)
+    testthat::expect_gte(results_1p$x_1$p_value, 0.01)
   }
 )
 
