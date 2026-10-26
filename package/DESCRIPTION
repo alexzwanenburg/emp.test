@@ -16,6 +16,7 @@ License: EUPL
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
+  harmonicmeanp,
   methods,
   rlang,
   rstream

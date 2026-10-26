@@ -933,12 +933,14 @@ setMethod(
     categories <- names(object@input_data[[1L]])
 
     results_list <- list()
+    # Suppress hypothesis_test_only because we need the p-values for
+    # rejecting the null hypothesis while controlling the family-wise errors.
     for (category in categories) {
       results_list[[category]] <- ..test_difference(
         object = object,
         x = x_1[, category],
         location = unname(x_0[category]),
-        hypothesis_test_only = hypothesis_test_only,
+        hypothesis_test_only = FALSE,
         cache_name = paste0(cache_name, "--", category)
       )
 
@@ -946,18 +948,26 @@ setMethod(
       results_list[[category]]$effect <- NULL
     }
 
+    # Combine p-values for individual categories while controlling the family-
+    # wise error rate. This prevents anti-conservative behaviour through naive
+    # selection of the minimum p-value.
+    p_value <- unname(harmonicmeanp::p.hmp(
+      p = sapply(results_list, function(x) (x$p_value)),
+      L = length(results_list),
+      multilevel = FALSE
+    ))
+    reject_null <- unname(p_value <= 1.0 - object@significance_level)
+
     if (hypothesis_test_only) {
-      return(list(
-        "reject_null" = any(sapply(results_list, function(x) (x$reject_null)))
-      ))
+      return(list("reject_null" = reject_null))
     }
 
     return(list(
       "expected" = object@expected,
       "observed" = x_0,
       "pointwise_tests" = results_list,
-      "p_value" = min(sapply(results_list, function(x) (x$p_value))),
-      "reject_null" = any(sapply(results_list, function(x) (x$reject_null)))
+      "p_value" = p_value,
+      "reject_null" = reject_null
     ))
   }
 )

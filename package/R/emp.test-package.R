@@ -3,6 +3,7 @@
 #' @name emp.test
 #' @import methods
 #' @importFrom rlang .data
+#' @importFrom harmonicmeanp p.hmp
 #' @importClassesFrom rstream rstream.runif
 #' @keywords internal
 "_PACKAGE"
