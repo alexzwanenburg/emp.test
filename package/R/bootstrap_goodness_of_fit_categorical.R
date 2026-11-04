@@ -120,6 +120,47 @@ categorical_goodness_of_fit_test <- function(
 }
 
 
+
+#' Point-wise categorical goodness-of-fit bootstrap test
+#'
+#' Performs a point-wise goodness-of-fit test on categorical variables.
+#'
+#' @param alternative The alternative hypothesis. One of `"two_sided"`
+#'   (default), `"greater"` and `"less"`.
+#' @inheritParams categorical_goodness_of_fit_test
+#'
+#' @details A goodness-of-fit test assesses how closely observed data matches
+#'   expected data or distributions.
+#'
+#'   The bootstrap categorical goodness-of-fit tests is the empirical equivalent
+#'   of statistical tests such as the chi-square or g-test.
+#'
+#' @returns htest object
+#' @export
+pointwise_categorical_goodness_of_fit_test <- function(
+    ...,
+    expected = NULL,
+    expected_args = NULL,
+    alternative = "two_sided",
+    significance_level = 0.95
+) {
+  # Thin wrapper around categorical_goodness_of_fit_test
+  return(
+    categorical_goodness_of_fit_test(
+      ...,
+      expected = expected,
+      expected_args = expected_args,
+      alternative = alternative,
+      significance_level = significance_level,
+      test_statistic = NULL,
+      test_statistic_args = NULL
+    )
+  )
+}
+
+
+
+
 # empiricalCategoricalGOFTest object -------------------------------------------
 setClass(
   "empiricalCategoricalGOFTest",

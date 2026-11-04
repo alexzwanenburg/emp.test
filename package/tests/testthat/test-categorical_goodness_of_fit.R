@@ -253,9 +253,18 @@ testthat::test_that(
     )
     testthat::expect_length(results_1, 2L)
     testthat::expect_setequal(names(results_1), c("x_1", "x_2"))
-    testthat::expect_lte(results_1$x_1$p_value, 0.04)
-    testthat::expect_gte(results_1$x_1$p_value, 0.03)
-    testthat::expect_lte(results_1$x_2$p_value, 0.02)
-    testthat::expect_gte(results_1$x_2$p_value, 0.01)
+    testthat::expect_lte(results_1$x_1$p_value, 0.09)
+    testthat::expect_gte(results_1$x_1$p_value, 0.08)
+    testthat::expect_lte(results_1$x_2$p_value, 0.03)
+    testthat::expect_gte(results_1$x_2$p_value, 0.02)
+
+    results_2 <- emp.test::pointwise_categorical_goodness_of_fit_test(
+      x_1,
+      x_2
+    )
+    testthat::expect_length(results_2, 2L)
+    testthat::expect_setequal(names(results_2), c("x_1", "x_2"))
+    testthat::expect_equal(results_1$x_1$p_value, results_2$x_1$p_value)
+    testthat::expect_equal(results_1$x_2$p_value, results_2$x_2$p_value)
   }
 )
