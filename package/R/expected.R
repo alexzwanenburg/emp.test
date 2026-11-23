@@ -5,6 +5,52 @@
 ) {
   # Null -----------------------------------------------------------------------
   # In this case, the null hypothesis-data is generated from the combined
+  # distribution of the input data.
+  if (is.null(expected)) {
+
+    # TODO: implement
+    browser()
+
+    return(expected)
+  }
+
+  # numeric --------------------------------------------------------------------
+  # Expected are an empiric distribution.
+  if (is.numeric(expected)) {
+
+    # TODO: implement
+    browser()
+
+    return(expected)
+  }
+
+  # quantile function ----------------------------------------------------------
+  # Expected are defined by a quantile function.
+  if (is.function(expected)) {
+
+    # TODO: implement.
+
+    return(expected)
+  }
+
+  # If we get here, expected has an unexpected type.
+  rlang::abort(
+    message = paste0(
+      "expected did not have a valid type: ", paste_s(class(expected)), ". Please consult the documentation."
+    ),
+    class = c("emp_test_error", "input_argument_error")
+  )
+}
+
+
+
+.set_expected_categorical <- function(
+    expected,
+    expected_args = NULL,
+    data
+) {
+  # Null -----------------------------------------------------------------------
+  # In this case, the null hypothesis-data is generated from the combined
   # counts of the input data.
   if (is.null(expected)) {
     expected <- data[[1L]]

@@ -83,6 +83,6 @@ Performs a goodness-of-fit test on categorical variables.
 A goodness-of-fit test assesses how closely observed data matches
 expected data or distributions.
 
-The bootstrap categorical goodness-of-fit tests is the empirical equivalent
+The bootstrap categorical goodness-of-fit test is the empirical equivalent
 of statistical tests such as the chi-square or g-test.
 }
