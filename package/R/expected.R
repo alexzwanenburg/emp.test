@@ -8,8 +8,10 @@
   # distribution of the input data.
   if (is.null(expected)) {
 
-    # TODO: implement
-    browser()
+    expected <- unlist(data, use.names = FALSE)
+    if (any(!is.finite(expected))) {
+
+    }
 
     return(expected)
   }
