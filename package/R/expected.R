@@ -10,7 +10,7 @@
 
     expected <- unlist(data, use.names = FALSE)
     if (any(!is.finite(expected))) {
-
+      ..error_value_not_finite(var_name = "input data")
     }
 
     return(expected)
@@ -19,9 +19,9 @@
   # numeric --------------------------------------------------------------------
   # Expected are an empiric distribution.
   if (is.numeric(expected)) {
-
-    # TODO: implement
-    browser()
+    if (any(!is.finite(expected))) {
+      ..error_value_not_finite(var_name = "expected")
+    }
 
     return(expected)
   }
@@ -30,7 +30,18 @@
   # Expected are defined by a quantile function.
   if (is.function(expected)) {
 
-    # TODO: implement.
+    x <- do.call(
+      expected,
+      args = c(
+        list("p" = c(0.1, 0.2, 0.5, 0.8, 0.9)),
+        expected_args
+      )
+    )
+
+    .check_is_numeric(x = x, var_name = "output of expected (quantile function)")
+    if (length(x) != 5L) {
+      "Output of expected (quantile function) should have the same length as the input p."
+    }
 
     return(expected)
   }
