@@ -22,8 +22,8 @@ NULL
 #'
 #'   * A random function that returns vectors of `logical`, `character`,
 #'   `factor` and `integer` (indicating a category, not counts). This function
-#'   is then sampled to identify the expected distribution. The **first**
-#'   argument is expected to be the number of samples drawn.
+#'   is then sampled to identify the expected distribution. An
+#'   argument `n` is expected to specify the number of samples drawn.
 #'
 #'   * `NULL` (default): in this case, the expected distribution is considered
 #'   to be the joined distribution of all input variables. This results in an

@@ -17,9 +17,9 @@ NULL
 #'   the following:
 #'
 #'   * A quantile function that returns `numeric` vectors . This function
-#'   is then sampled to identify the expected distribution. The **first**
-#'   argument is expected to be a vector of quantile probabilies, (e.g., `p` of
-#'   `stats::qnorm`).
+#'   is then sampled to identify the expected distribution. The
+#'   argument is expected to be a vector of quantile probabilities named `p`,
+#'   such as `stats::qnorm`.
 #'
 #'   * `NULL` (default): in this case, the expected distribution is considered
 #'   to be the joined distribution of all input variables. This results in an
@@ -193,7 +193,7 @@ setMethod(
     .Object@n_draw_input_samples <- get_n_draw_input_samples(.Object)
 
     # Check and set expected.
-    .Object@expected <- .set_expected_categorical(
+    .Object@expected <- .set_expected_numerical(
       expected = expected,
       data = .Object@input_data,
       expected_args = expected_args
@@ -250,7 +250,7 @@ setMethod(
         test_statistic_fun <- test_statistic_cramer_von_mises
 
       } else if (tolower(test_statistic) %in% c("anderson-darling", "anderson_darling", "ad")) {
-        test_statistic_fun <- test_statistic_anderson_darlong
+        test_statistic_fun <- test_statistic_anderson_darling
 
       } else if (tolower(test_statistic) %in% c("ks", "kolmogorov_smirnov", "kolmogorov-smirnov")) {
         test_statistic_fun <- test_statistic_ks
