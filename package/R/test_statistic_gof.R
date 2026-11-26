@@ -73,3 +73,30 @@ test_statistic_kuiper <- function(
 ) {
   return(max(observed - expected) + max(expected - observed))
 }
+
+
+
+test_statistic_cramer_von_mises <- function(
+    observed,
+    expected
+) {
+  browser()
+}
+
+
+
+test_statistic_anderson_darling <- function(
+    observed,
+    expected
+) {
+  browser()
+}
+
+
+
+test_statistic_mean_residual_error <- function(
+    observed,
+    expected
+) {
+  browser()
+}
