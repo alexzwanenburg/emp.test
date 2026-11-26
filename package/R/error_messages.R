@@ -133,6 +133,19 @@
 
 
 
+..error_value_not_finite <- function(
+    var_name,
+    call = rlang::caller_env()
+) {
+  rlang::abort(
+    message = paste0(var_name, " contains one or values that are NA or not finite."),
+    class = c("emp_test_error", "input_argument_error"),
+    call = call
+  )
+}
+
+
+
 ..error_value_not_allowed <- function(
     x,
     var_name,
