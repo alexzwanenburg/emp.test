@@ -38,6 +38,6 @@ Collate:
     'error_messages.R'
     'expected.R'
     'random.R'
-    'test_statistic_gof_categorical.R'
+    'test_statistic_gof.R'
     'tolerance.R'
     'utils.R'

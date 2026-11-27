@@ -1,4 +1,4 @@
-.set_expected_categorical <- function(
+.set_expected_numerical <- function(
     expected,
     expected_args = NULL,
     data

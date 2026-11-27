@@ -25,9 +25,9 @@ depends on \code{expected}.}
 the following:
 \itemize{
 \item A quantile function that returns \code{numeric} vectors . This function
-is then sampled to identify the expected distribution. The \strong{first}
-argument is expected to be a vector of quantile probabilies, (e.g., \code{p} of
-\code{stats::qnorm}).
+is then sampled to identify the expected distribution. The
+argument is expected to be a vector of quantile probabilities named \code{p},
+such as \code{stats::qnorm}.
 \item \code{NULL} (default): in this case, the expected distribution is considered
 to be the joined distribution of all input variables. This results in an
 \emph{independence} test.

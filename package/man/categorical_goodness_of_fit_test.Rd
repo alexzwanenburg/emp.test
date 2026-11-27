@@ -31,8 +31,8 @@ allowed as input variable, \code{expected} can also be one of the following:
 \item A \code{numeric} vector, representing the fraction of each category.
 \item A random function that returns vectors of \code{logical}, \code{character},
 \code{factor} and \code{integer} (indicating a category, not counts). This function
-is then sampled to identify the expected distribution. The \strong{first}
-argument is expected to be the number of samples drawn.
+is then sampled to identify the expected distribution. An
+argument \code{n} is expected to specify the number of samples drawn.
 \item \code{NULL} (default): in this case, the expected distribution is considered
 to be the joined distribution of all input variables. This results in an
 \emph{independence} test.
